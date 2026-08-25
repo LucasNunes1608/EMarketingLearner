@@ -10,7 +10,7 @@ Preencha no papel e depois passe para o aplicativo. Leva menos de 20 minutos e v
 - Nome do negócio: _____________________________________________________________
 - Categoria: ___________________________________________________________________
 - Descrição em uma frase (o que você faz e para quem): __________________________
-  ***
+- Continue aqui se precisar: ___________________________________________________
 - Endereço ou região de atendimento: ___________________________________________
 - Horário: _____________________________________________________________________
 
@@ -72,4 +72,4 @@ Ausência (fora do horário, dizendo quando você volta):
 
 ## 7. Rotina de fim de dia (5 minutos)
 
-Todo dia às ****:**** eu abro o filtro "Orçamento enviado" e mando uma mensagem para cada pessoa que ainda não respondeu.
+Todo dia às ______ eu abro o filtro "Orçamento enviado" e mando uma mensagem para cada pessoa que ainda não respondeu.

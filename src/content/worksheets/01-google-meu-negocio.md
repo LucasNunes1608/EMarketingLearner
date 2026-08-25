@@ -37,7 +37,7 @@ Feriado mais próximo que muda seu horário: ___________________________________
 
 - [ ] Busquei meu negócio no Google para ver se o perfil já existe
 - [ ] Criei ou reivindiquei o perfil com uma conta de e-mail que é minha
-- [ ] Comecei a verificação (carta, telefone ou vídeo). Data: ****/****/______
+- [ ] Comecei a verificação (carta, telefone ou vídeo). Data: ____ / ____ / ______
 - [ ] Conferi o pino no mapa arrastando até a porta exata
 - [ ] Preenchi horário de todos os dias, inclusive fim de semana
 - [ ] Coloquei telefone com WhatsApp e um link de contato
@@ -60,4 +60,4 @@ Resposta padrão para avaliação ruim (reconheça, explique em uma linha, ofere
 
 Vou responder toda avaliação em até ____ dias e subir ____ fotos novas por mês.
 
-Assinatura: ____________________________ Data: ****/****/______
+Assinatura: ____________________________ Data: ____ / ____ / ______
