@@ -61,17 +61,25 @@ const { Content } = await render(worksheet);
     }
   }
 
-  /* Checklist boxes: Markdown task lists render as disabled checkboxes, which are
-     useless on paper. Draw a real box the reader can tick with a pen. */
-  .worksheet :global(input[type='checkbox']) {
-    width: 1rem;
-    height: 1rem;
-    margin-inline-end: 0.5rem;
-    vertical-align: middle;
+  /*
+   * Checklist boxes. rehype-worksheet-checkboxes turns Markdown task-list inputs
+   * into decorative spans; this draws the square the reader ticks with a pen.
+   */
+  .worksheet :global(.worksheet-box) {
+    display: inline-block;
+    width: 0.95rem;
+    height: 0.95rem;
+    margin-inline-end: 0.6rem;
+    border: 1.5px solid var(--color-ink-500);
+    border-radius: 0.15rem;
+    vertical-align: -0.1rem;
   }
 
-  .worksheet :global(ul:has(input[type='checkbox'])) {
+  .worksheet :global(li:has(.worksheet-box)) {
     list-style: none;
+  }
+
+  .worksheet :global(ul:has(.worksheet-box)) {
     padding-inline-start: 0;
   }
 

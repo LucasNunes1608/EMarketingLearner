@@ -89,9 +89,9 @@ describe('posterUrlFor', () => {
 
   it('uses the declared poster for hls sources', () => {
     const poster = 'https://cdn.example.com/poster.jpg';
-    expect(
-      posterUrlFor({ provider: 'hls', src: 'https://x.example.com/a.m3u8', poster })
-    ).toBe(poster);
+    expect(posterUrlFor({ provider: 'hls', src: 'https://x.example.com/a.m3u8', poster })).toBe(
+      poster
+    );
   });
 
   it('returns null when an hls source declares no poster', () => {

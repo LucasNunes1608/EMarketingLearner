@@ -1,0 +1,144 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Buscar"
+  description="Busque por assunto dentro de todas as aulas e folhas de exercício."
+>
+  <div class="mx-auto max-w-3xl px-4 py-8">
+    <h1 class="text-3xl font-bold text-ink-900">Buscar</h1>
+    <p class="mt-2 text-ink-700">
+      Procure por assunto — por exemplo <em>Pix</em>, <em>foto</em> ou <em>catálogo</em>.
+    </p>
+
+    <form class="mt-6" role="search" data-search-form>
+      <label class="block text-sm font-semibold text-ink-900" for="busca">
+        O que você quer aprender?
+      </label>
+      <div class="mt-1 flex gap-2">
+        <input
+          id="busca"
+          type="search"
+          name="q"
+          autocomplete="off"
+          placeholder="Digite uma palavra"
+          data-search-input
+          class="w-full rounded-lg border border-ink-300 px-3 py-2 text-ink-900"
+        />
+        <button
+          type="submit"
+          class="rounded-lg bg-brand-700 px-5 py-2 font-semibold text-white hover:bg-brand-800"
+        >
+          Buscar
+        </button>
+      </div>
+    </form>
+
+    <p class="mt-4 text-sm text-ink-500" data-search-status role="status" aria-live="polite"></p>
+
+    <ul class="mt-4 divide-y divide-ink-100" data-search-results></ul>
+  </div>
+</BaseLayout>
+
+<script>
+  /**
+   * Search runs entirely in the browser against a static index that Pagefind
+   * builds from the generated HTML. There is no search server and no API call,
+   * which is why search costs nothing to run at any traffic level.
+   *
+   * The index only exists after `pagefind --site dist`, so this degrades to a
+   * clear message during `astro dev` rather than throwing.
+   */
+  import { type Pagefind, PAGEFIND_BUNDLE_URL } from '@/types/pagefind';
+
+  const form = document.querySelector<HTMLFormElement>('[data-search-form]');
+  const input = document.querySelector<HTMLInputElement>('[data-search-input]');
+  const status = document.querySelector<HTMLElement>('[data-search-status]');
+  const list = document.querySelector<HTMLUListElement>('[data-search-results]');
+
+  const MAX_RESULTS = 12;
+  let pagefind: Pagefind | null = null;
+  let loadFailed = false;
+
+  async function getPagefind(): Promise<Pagefind | null> {
+    if (pagefind || loadFailed) return pagefind;
+    try {
+      // The specifier is a variable on purpose: the bundle is emitted by the
+      // Pagefind CLI after astro build, so neither Vite nor tsc may try to
+      // resolve it at compile time.
+      pagefind = (await import(/* @vite-ignore */ PAGEFIND_BUNDLE_URL)) as Pagefind;
+      return pagefind;
+    } catch {
+      loadFailed = true;
+      return null;
+    }
+  }
+
+  function setStatus(message: string): void {
+    if (status) status.textContent = message;
+  }
+
+  async function runSearch(term: string): Promise<void> {
+    if (!list) return;
+    list.replaceChildren();
+
+    const query = term.trim();
+    if (query.length === 0) {
+      setStatus('');
+      return;
+    }
+
+    setStatus('Buscando…');
+
+    const engine = await getPagefind();
+    if (!engine) {
+      setStatus(
+        'A busca só funciona no site publicado. Rode "npm run build" e depois "npm run preview".'
+      );
+      return;
+    }
+
+    const { results } = await engine.search(query);
+    if (results.length === 0) {
+      setStatus(`Nenhum resultado para "${query}".`);
+      return;
+    }
+
+    const shown = await Promise.all(results.slice(0, MAX_RESULTS).map((r) => r.data()));
+
+    setStatus(
+      results.length === 1 ? '1 resultado encontrado.' : `${results.length} resultados encontrados.`
+    );
+
+    for (const result of shown) {
+      const item = document.createElement('li');
+      item.className = 'py-4';
+
+      const link = document.createElement('a');
+      link.href = result.url;
+      link.className = 'font-semibold text-brand-700 no-underline hover:underline';
+      link.textContent = result.meta?.title ?? result.url;
+
+      const excerpt = document.createElement('p');
+      excerpt.className = 'mt-1 text-sm text-ink-700';
+      // Pagefind returns highlight markup (<mark>) in the excerpt.
+      excerpt.innerHTML = result.excerpt;
+
+      item.append(link, excerpt);
+      list.append(item);
+    }
+  }
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void runSearch(input?.value ?? '');
+  });
+
+  // Deep-link support: /buscar?q=pix
+  const initial = new URLSearchParams(window.location.search).get('q');
+  if (initial && input) {
+    input.value = initial;
+    void runSearch(initial);
+  }
+</script>
