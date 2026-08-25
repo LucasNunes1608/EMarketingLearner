@@ -103,25 +103,25 @@ Key decisions and gotchas for whoever picks this up:
 
 ## Phase 2: Content Model & Seed Curriculum
 
-Status: Not started
+Status: Complete
 
-- [ ] Define `src/content.config.ts` with Zod schemas:
-  - `courses`: `title`, `slug`, `description`, `level` (enum), `order`, `published`
-  - `lessons`: `title`, `course` (reference), `order`, `video` (discriminated union on
+- [x] Define `src/content.config.ts` with Zod schemas:
+  - `courses`: `title`, `description`, `level` (enum), `order`, `published`
+  - `lessons`: `title`, `course`, `order`, `video` (discriminated union on
     `provider`), `durationSeconds`, `summary`, `worksheet` (optional), `published`
-- [ ] Enforce YouTube ID format (`^[A-Za-z0-9_-]{11}$`) in the schema so a bad ID fails the build
-- [ ] Write course `colocando-seu-negocio-no-digital` with **6 lessons in pt-BR**:
+- [x] Enforce YouTube ID format (`^[A-Za-z0-9_-]{11}$`) in the schema so a bad ID fails the build
+- [x] Write course `colocando-seu-negocio-no-digital` with **6 lessons in pt-BR**:
   1. Google Meu Negócio: apareça quando buscarem por você
   2. WhatsApp Business: catálogo, respostas rápidas e etiquetas
   3. Instagram que vende: perfil, bio e destaques que convertem
   4. Pix e pagamentos: receba sem taxa e organize o caixa
   5. Fotos e vídeos com o celular: o básico que muda tudo
   6. Conteúdo que atrai cliente: o que postar quando falta ideia
-- [ ] Each lesson: real practical pt-BR body copy (not lorem), placeholder YouTube ID,
+- [x] Each lesson: real practical pt-BR body copy (not lorem), placeholder YouTube ID,
       and a printable worksheet the learner can forward on WhatsApp
-- [ ] Add `src/lib/content.ts` helpers: `getPublishedCourses`, `getLessonsForCourse` (sorted),
+- [x] Add `src/lib/content.ts` helpers: `getPublishedCourses`, `getLessonsForCourse` (sorted),
       `getAdjacentLessons`, `getCourseDuration`
-- [ ] Unit tests for the content helpers and for schema rejection of malformed entries
+- [x] Unit tests for the content helpers and for schema rejection of malformed entries
 
 ### Verification Plan
 
@@ -129,9 +129,40 @@ Status: Not started
 - `npm run build` succeeds and `dist/` contains one HTML file per lesson (expect 6)
 - Published lesson count === 6
 
+**Result (verified):** `npm run test` → 66/66 passing across 3 files (site-config 4,
+content 38, schemas 24), including six rejection cases for malformed YouTube IDs.
+`npx astro sync` → clean, zero warnings: all 13 content files satisfy the Zod schemas.
+Frontmatter cross-check: lesson `order` values are 1-6 with no duplicates, six distinct
+valid 11-char video IDs, and all six `worksheet` refs match their worksheet `lesson`
+back-references. The "one HTML file per lesson" check is deferred to Phase 3, which is
+where the routes are created.
+
 ### Phase Summary
 
-_(write when phase completes)_
+Content model and the full seed curriculum are in place: 1 course, 6 lessons
+(~750 words of real pt-BR each, no placeholder prose), 6 printable worksheets.
+
+Architecture notes for whoever continues:
+
+- **Schemas live in `src/lib/schemas.ts`, not in `content.config.ts`.** They import
+  `astro/zod` rather than `astro:content`, which is what makes them unit-testable with no
+  build step. `content.config.ts` is a thin wiring file that only attaches glob loaders.
+- **`course` is a plain string, not Astro's `reference()`.** `reference()` would have
+  forced the schema to import `astro:content` and lose testability. The relational checks
+  it would have given us live in `assertContentIntegrity()` instead, which additionally
+  catches things `reference()` cannot: duplicate `order` within a course, a lesson filed in
+  a directory that disagrees with its `course` field, and orphaned worksheets. It collects
+  **all** problems and throws once, so a single build surfaces every error.
+- **`src/lib/content-loader.ts` is the only file that imports `astro:content`.** Pages must
+  call `loadContent()` rather than `getCollection()` directly, otherwise the integrity
+  checks never run.
+- **Stale-cache gotcha:** running `astro sync` while content files are still being written
+  caches partial entries and then reports bogus `Duplicate id` warnings on the next sync.
+  Fix is `rm -rf .astro node_modules/.astro && npx astro sync`. Worth knowing when adding
+  a batch of new lessons.
+- Placeholder video IDs are `AULA0000001`-`AULA0000006`. They are format-valid so the build
+  passes, and obviously fake so they cannot be mistaken for real footage. Swapping in real
+  IDs is a frontmatter-only change — see README.
 
 ---
 

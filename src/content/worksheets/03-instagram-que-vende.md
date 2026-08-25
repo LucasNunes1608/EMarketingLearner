@@ -61,4 +61,4 @@ Peça para alguém que não conhece seu negócio olhar seu perfil por cinco segu
 - Onde eu atendo? ______________________________________________________________
 - Como se compra? ______________________________________________________________
 
-Errou alguma? Volte na bio e conserte. Data do teste: ****/****/______
+Errou alguma? Volte na bio e conserte. Data do teste: ____ / ____ / ______
