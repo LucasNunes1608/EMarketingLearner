@@ -21,6 +21,12 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    // Never inline assets into the HTML. Astro would otherwise inline small
+    // <script> blocks, and an inline script cannot be allowed by a static
+    // Content-Security-Policy without `unsafe-inline` — which would defeat the
+    // point of the CSP in public/_headers. Keeping every script external lets us
+    // ship `script-src 'self'`.
+    build: { assetsInlineLimit: 0 },
   },
   build: {
     // Emit `/curso/slug/index.html` so the CDN can serve clean URLs without redirects.

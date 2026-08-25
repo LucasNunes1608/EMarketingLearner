@@ -344,16 +344,18 @@ Notes for future work:
 
 ## Phase 6: Docs, CI & Deploy Readiness
 
-Status: Not started
+Status: Complete
 
-- [ ] `README.md` (English): what it is, cost model table, prerequisites, install, run,
+- [x] `README.md` (English): what it is, cost model table, prerequisites, install, run,
       test, build, **how to add a course/lesson**, **how to swap in real YouTube IDs**,
       how to deploy to Cloudflare Pages, and the migration path to self-hosted R2 video
-- [ ] `CONTENT.md`: authoring guide for lessons and worksheets
-- [ ] `.github/workflows/ci.yml`: install → lint → check → unit → build → E2E, on push/PR
-- [ ] `public/_headers` for Cloudflare: security headers + long-lived asset caching
-- [ ] `public/robots.txt`, sitemap, favicon/PWA icons
-- [ ] Final full-suite run and cost-model sanity check documented in the README
+- [x] `CONTENT.md`: authoring guide for lessons and worksheets
+- [x] `.github/workflows/ci.yml`: install → format → lint → check → unit → build, then
+      a dependent E2E job
+- [x] `public/_headers` for Cloudflare: security headers + long-lived asset caching
+- [x] `robots.txt` (generated route, so the sitemap URL tracks `SITE.url`), sitemap,
+      favicon and PWA icons
+- [x] Final full-suite run and cost-model sanity check documented in the README
 
 ### Verification Plan
 
@@ -362,16 +364,125 @@ Status: Not started
 - `README.md` quickstart verified by following it literally
 - CI workflow YAML parses
 
+**Result (verified):** `npm run verify` (format:check → lint → check → test → build)
+exits **0**: 0 type errors, lint clean, 128/128 unit tests, 17 pages built.
+`npx playwright test` → **60/60** across desktop and mobile. All deploy artifacts confirmed
+present in `dist/`: `_headers`, `robots.txt`, `sw.js`, `manifest.webmanifest`,
+`sitemap-index.xml`, `favicon.svg`, three PNG icons and the Pagefind bundle.
+`dist/robots.txt` renders the sitemap URL from `SITE.url` as intended.
+
 ### Phase Summary
 
-_(write when phase completes)_
+Docs, CI and deployment configuration complete.
+
+Notable decision in this phase: **`vite.build.assetsInlineLimit: 0`**. Astro was inlining
+two small `<script>` blocks into the HTML, and an inline script cannot be permitted by a
+static CSP without `'unsafe-inline'` — which would have made the CSP close to worthless.
+Forcing every script external buys a genuinely strict `script-src 'self'`.
+`style-src` still needs `'unsafe-inline'` for the video poster background and the progress
+bar width, both set as style attributes; style injection is a far smaller risk than script
+injection and script-src stays strict.
+
+`robots.txt` is a generated route (`src/pages/robots.txt.ts`) rather than a static file, so
+the absolute sitemap URL cannot drift from `SITE.url` — a stale one silently breaks
+search-engine discovery.
 
 ---
 
 ## Final Recap
 
-_(write when all phases complete)_
+V1 is complete and verified. A free, static, offline-capable course platform in pt-BR,
+with one seed course of six lessons and six printable worksheets, deployable to Cloudflare
+Pages for the cost of a domain.
+
+**Delivered**
+
+- 17 static routes: home, course, 6 lessons, 6 worksheets, search, certificate, offline
+- Content pipeline with build-time Zod validation and relational integrity checks
+- Click-to-load video facade — zero YouTube contact until the learner presses play
+- Progress, "continue de onde parou", and a printable certificate, all client-side only
+- Static search (Pagefind), offline support (hand-written service worker), installable PWA
+- **128 unit tests + 60 E2E tests**, zero serious/critical axe violations on 7 page types
+- README, authoring guide, CI workflow, security headers
+
+**The four things most likely to bite the next person**
+
+1. **Vite is pinned to `^6.4.3` via `overrides`** because Astro 5.18 wants v6 while Tailwind
+   and Vitest hoist v7. Moving Astro versions means revisiting this.
+2. **`src/content/` is Prettier-ignored on purpose.** Prettier destroys the worksheets'
+   underscore fill-in blanks by reading them as Markdown bold and horizontal rules.
+3. **`assetsInlineLimit: 0` is load-bearing for the CSP**, not a performance tweak.
+4. **Pages must use `CollectionEntry<...>`, not the narrow `Entry<T>`** from
+   `@/lib/content`, or `render()` fails type-check.
+
+**Honest limitations**
+
+- Video IDs are placeholders (`AULA0000001`–`AULA0000006`). Nothing plays until real
+  YouTube IDs are pasted in. This is expected — the platform was built before the content.
+- `SITE.url` is `negociodigital.example.com` and **must** be changed before the first
+  production deploy; it drives canonical URLs, OG tags, the sitemap and robots.txt.
+- Offline caching is runtime-only: a lesson is available offline once visited, not before.
+  Precaching all six would spend data the learner never agreed to spend.
+- Search results cover lessons and courses only, not worksheets — deliberate, to avoid
+  duplicate hits for the same material.
+- Axe covers roughly a third of WCAG. Focus order, alt-text quality and whether the
+  Portuguese reads clearly to an actual shop owner still need human review.
+- The site has never been deployed or seen by a real learner. No usability testing was done.
 
 ## Deployment Plan
 
-_(write when all phases complete)_
+Prerequisites: a GitHub account, a free Cloudflare account, and (optionally) a domain.
+No credentials were handled by the agent; every step below is yours to perform.
+
+**1. Set the canonical URL — do this first**
+
+```
+src/config/site.ts  →  url: 'https://your-real-domain.com.br'
+```
+
+Skipping this ships `example.com` in every canonical tag, OG tag, and the sitemap.
+
+**2. Push to GitHub**
+
+```bash
+git remote add origin git@github.com:<you>/<repo>.git
+git push -u origin main
+```
+
+CI runs automatically on push: format, lint, type-check, 128 unit tests, build, then
+60 E2E and accessibility tests.
+
+**3. Connect Cloudflare Pages**
+
+Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → select the repo.
+
+| Field                  | Value           |
+| ---------------------- | --------------- |
+| Framework preset       | Astro           |
+| Build command          | `npm run build` |
+| Build output directory | `dist`          |
+| Node version           | `24`            |
+
+Save and Deploy. Every push to `main` redeploys.
+
+**4. Attach the domain**
+
+Register a `.com.br` at [registro.br](https://registro.br) (~R$40/year), then add it under
+**Custom domains** in the Pages project. Cloudflare issues the TLS certificate.
+
+**5. Post-deploy checks**
+
+- `https://your-domain/robots.txt` shows your real sitemap URL, not `example.com`
+- A lesson page's HTML contains `youtube-nocookie.com` and **no** `www.youtube.com`
+- DevTools → Application → Service Workers shows `sw.js` activated
+- Lighthouse on a lesson page: accessibility and best-practices should both be high
+- Install the PWA from Chrome on an Android phone and confirm the icon renders
+
+**6. Publishing real videos**
+
+Upload each lesson to YouTube as **Unlisted**, copy the 11-character ID, replace the
+`AULA…` placeholder in the lesson frontmatter, set `durationSeconds`, and push. The build
+rejects malformed IDs.
+
+**Rollback:** Cloudflare Pages keeps every deployment. Roll back from the dashboard by
+promoting a previous deployment — no rebuild required.

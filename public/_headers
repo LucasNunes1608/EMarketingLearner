@@ -1,0 +1,28 @@
+# Cloudflare Pages response headers.
+# Syntax: https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  # script-src stays 'self' because astro.config.ts sets assetsInlineLimit: 0,
+  # so no script is ever inlined into the HTML.
+  # style-src needs 'unsafe-inline' for the video facade's poster background and
+  # the progress bar width, both set as style attributes. Style injection is a far
+  # smaller risk than script injection, and script-src remains strict.
+  # frame-src allows only the no-cookie YouTube origin; img-src allows only its
+  # thumbnail CDN. Nothing else third-party can load.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com; frame-src https://www.youtube-nocookie.com; connect-src 'self'; font-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+
+# Astro fingerprints everything in /_astro/, so it can be cached forever.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/icons/*
+  Cache-Control: public, max-age=604800
+
+# The service worker must never be served stale, or a bad worker sticks around.
+/sw.js
+  Cache-Control: no-cache
