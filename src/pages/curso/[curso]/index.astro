@@ -1,0 +1,131 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import {
+  certificatePath,
+  formatDuration,
+  getCourseDurationSeconds,
+  getLessonsForCourse,
+  getPublishedCourses,
+  lessonPath,
+  lessonSlug,
+  levelLabel,
+} from '@/lib/content';
+import { loadContent } from '@/lib/content-loader';
+import type { CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const { courses, lessons } = await loadContent();
+  return getPublishedCourses(courses).map((course) => ({
+    params: { curso: course.id },
+    props: { course, courseLessons: getLessonsForCourse(lessons, course.id) },
+  }));
+}
+
+interface Props {
+  course: CollectionEntry<'courses'>;
+  courseLessons: CollectionEntry<'lessons'>[];
+}
+
+const { course, courseLessons } = Astro.props;
+const totalDuration = formatDuration(getCourseDurationSeconds(courseLessons));
+---
+
+<BaseLayout title={course.data.title} description={course.data.description}>
+  <div class="mx-auto max-w-3xl px-4 py-8">
+    <nav aria-label="Trilha de navegação" class="text-sm">
+      <ol class="flex flex-wrap items-center gap-2 text-ink-500">
+        <li><a class="text-brand-700 underline underline-offset-2" href="/">Início</a></li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page">{course.data.title}</li>
+      </ol>
+    </nav>
+
+    <header class="mt-6">
+      <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+        <span class="rounded bg-brand-50 px-2 py-1 text-brand-700">
+          {levelLabel(course.data.level)}
+        </span>
+        <span class="text-ink-500">
+          {courseLessons.length}
+          {courseLessons.length === 1 ? 'aula' : 'aulas'} · {totalDuration}
+        </span>
+      </div>
+
+      <h1 class="mt-3 text-3xl font-bold text-ink-900">{course.data.title}</h1>
+      <p class="mt-3 text-lg text-ink-700">{course.data.description}</p>
+    </header>
+
+    {/* Progress summary and bar. Values come from localStorage on the client. */}
+    <section
+      class="mt-8 rounded-xl border border-ink-100 bg-surface-alt p-4"
+      aria-labelledby="progresso-titulo"
+      data-course-progress={course.id}
+      data-course-total={courseLessons.length}
+    >
+      <h2 id="progresso-titulo" class="text-sm font-semibold text-ink-900">Seu progresso</h2>
+      <p class="mt-1 text-sm text-ink-700" data-progress-label aria-live="polite">
+        Você ainda não começou este curso.
+      </p>
+      <div
+        class="mt-3 h-2 w-full overflow-hidden rounded-full bg-ink-100"
+        role="progressbar"
+        aria-labelledby="progresso-titulo"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+        data-progress-bar
+      >
+        <div class="h-full w-0 bg-brand-600 transition-all" data-progress-fill></div>
+      </div>
+
+      <a
+        href={certificatePath(course.id)}
+        hidden
+        data-certificate-link
+        class="mt-4 inline-block rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white no-underline hover:bg-brand-800"
+      >
+        Emitir meu certificado
+      </a>
+    </section>
+
+    <section class="mt-8" aria-labelledby="aulas-titulo">
+      <h2 id="aulas-titulo" class="text-xl font-bold text-ink-900">Aulas</h2>
+
+      <ol class="mt-4 divide-y divide-ink-100 rounded-xl border border-ink-100">
+        {
+          courseLessons.map((lesson, index) => {
+            const slug = lessonSlug(lesson);
+            return (
+              <li class="flex items-start gap-3 p-4">
+                <span
+                  aria-hidden="true"
+                  class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-alt text-sm font-bold text-ink-700"
+                  data-lesson-badge={slug}
+                >
+                  {index + 1}
+                </span>
+
+                <span class="min-w-0 flex-1">
+                  <a
+                    class="font-semibold text-ink-900 no-underline hover:text-brand-800"
+                    href={lessonPath(course.id, slug)}
+                  >
+                    {lesson.data.title}
+                  </a>
+                  <span class="mt-1 block text-sm text-ink-700">{lesson.data.summary}</span>
+                  <span class="mt-1 block text-xs text-ink-500">
+                    {formatDuration(lesson.data.durationSeconds)}
+                    <span hidden data-lesson-done-label={slug}>
+                      {' '}
+                      · Concluída
+                    </span>
+                  </span>
+                </span>
+              </li>
+            );
+          })
+        }
+      </ol>
+    </section>
+  </div>
+</BaseLayout>

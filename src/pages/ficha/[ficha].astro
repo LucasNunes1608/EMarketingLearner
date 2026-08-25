@@ -1,0 +1,88 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { loadContent } from '@/lib/content-loader';
+import { type CollectionEntry, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const { worksheets } = await loadContent();
+  return worksheets.map((worksheet) => ({
+    params: { ficha: worksheet.id },
+    props: { worksheet },
+  }));
+}
+
+interface Props {
+  worksheet: CollectionEntry<'worksheets'>;
+}
+
+const { worksheet } = Astro.props;
+const { Content } = await render(worksheet);
+---
+
+<BaseLayout
+  title={worksheet.data.title}
+  description={`Folha de exercício: ${worksheet.data.title}`}
+>
+  <div class="mx-auto max-w-3xl px-4 py-8">
+    <div class="no-print flex flex-wrap items-center justify-between gap-3">
+      <a class="text-brand-700 underline underline-offset-2" href="/">← Voltar</a>
+      <button
+        type="button"
+        data-print
+        class="rounded-lg bg-brand-700 px-4 py-2 font-semibold text-white hover:bg-brand-800"
+      >
+        Imprimir ou salvar em PDF
+      </button>
+    </div>
+
+    <h1 class="mt-6 text-3xl font-bold text-ink-900">{worksheet.data.title}</h1>
+
+    <div class="prose worksheet mt-6">
+      <Content />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /*
+   * Worksheets are meant to be printed or saved as PDF from the browser's own
+   * dialog. That is why there is no PDF library in this project: window.print()
+   * is free, works on every phone, and ships zero bytes of JavaScript.
+   */
+  @media print {
+    :global(header),
+    :global(footer),
+    .no-print {
+      display: none !important;
+    }
+
+    :global(body) {
+      background: #fff;
+    }
+  }
+
+  /* Checklist boxes: Markdown task lists render as disabled checkboxes, which are
+     useless on paper. Draw a real box the reader can tick with a pen. */
+  .worksheet :global(input[type='checkbox']) {
+    width: 1rem;
+    height: 1rem;
+    margin-inline-end: 0.5rem;
+    vertical-align: middle;
+  }
+
+  .worksheet :global(ul:has(input[type='checkbox'])) {
+    list-style: none;
+    padding-inline-start: 0;
+  }
+
+  .worksheet :global(li) {
+    line-height: 2;
+  }
+</style>
+
+<script>
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('[data-print]')) window.print();
+  });
+</script>

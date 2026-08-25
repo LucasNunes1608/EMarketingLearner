@@ -95,6 +95,17 @@ export function formatDuration(seconds: number): string {
   return `${hours} h ${String(minutes).padStart(2, '0')} min`;
 }
 
+/** pt-BR display labels for the course level enum. */
+export const LEVEL_LABELS: Record<CourseData['level'], string> = {
+  iniciante: 'Iniciante',
+  intermediario: 'Intermediário',
+  avancado: 'Avançado',
+};
+
+export function levelLabel(level: CourseData['level']): string {
+  return LEVEL_LABELS[level];
+}
+
 /** Whole-percent completion, clamped to 0-100. Returns 0 for an empty course. */
 export function completionPercent(completedCount: number, totalCount: number): number {
   if (totalCount <= 0) return 0;

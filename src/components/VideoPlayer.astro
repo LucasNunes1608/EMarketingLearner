@@ -1,0 +1,110 @@
+---
+import type { VideoSource } from '@/lib/schemas';
+import { embedUrlFor, posterUrlFor } from '@/lib/video/embed';
+
+interface Props {
+  source: VideoSource;
+  /** Lesson title — used to give the play button and the iframe accessible names. */
+  title: string;
+}
+
+const { source, title } = Astro.props;
+
+const embedUrl = embedUrlFor(source);
+const posterUrl = posterUrlFor(source);
+---
+
+{
+  /*
+   * Click-to-load video facade.
+   *
+   * Nothing from YouTube loads until the learner presses play: no iframe, no
+   * ~1 MB of player JavaScript, no cookies. That matters three ways here — the
+   * page stays fast on a weak mobile connection, learners who only read the text
+   * spend none of their data allowance on a video they never watch, and with no
+   * third-party cookies set on load the site needs no LGPD consent banner.
+   *
+   * The poster is a CSS background over a brand gradient rather than an <img>, so
+   * a thumbnail that 404s (as the AULA... placeholders do) degrades to something
+   * that still looks deliberate instead of a broken-image icon.
+   */
+}
+<div
+  class="video-facade relative w-full overflow-hidden rounded-xl bg-brand-900"
+  style={`aspect-ratio: 16 / 9; ${posterUrl ? `background-image: linear-gradient(rgba(8,67,44,.35), rgba(8,67,44,.55)), url('${posterUrl}');` : ''} background-size: cover; background-position: center;`}
+  data-video-facade
+  data-embed-url={embedUrl}
+  data-video-title={title}
+>
+  <button
+    type="button"
+    class="group absolute inset-0 grid h-full w-full cursor-pointer place-items-center border-0 bg-transparent p-0"
+    data-video-play
+  >
+    <span class="sr-only">Assistir ao vídeo: {title}</span>
+    <span
+      aria-hidden="true"
+      class="grid h-16 w-16 place-items-center rounded-full bg-white/95 shadow-lg transition-transform group-hover:scale-110 sm:h-20 sm:w-20"
+    >
+      <svg viewBox="0 0 24 24" class="ml-1 h-8 w-8 fill-brand-800 sm:h-10 sm:w-10">
+        <path d="M8 5v14l11-7z"></path>
+      </svg>
+    </span>
+    <span
+      aria-hidden="true"
+      class="absolute bottom-3 left-3 rounded-md bg-black/65 px-2 py-1 text-xs font-medium text-white"
+    >
+      O vídeo só carrega quando você tocar em play
+    </span>
+  </button>
+</div>
+
+<style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .video-facade :global(iframe) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+</style>
+
+<script>
+  // Swap the facade for a real iframe on first interaction. Delegated from the
+  // document so it costs one listener regardless of how many players a page has.
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null;
+    const button = target?.closest<HTMLElement>('[data-video-play]');
+    if (!button) return;
+
+    const facade = button.closest<HTMLElement>('[data-video-facade]');
+    const embedUrl = facade?.dataset.embedUrl;
+    if (!facade || !embedUrl) return;
+
+    const iframe = document.createElement('iframe');
+    iframe.src = embedUrl;
+    // Without a title the iframe is an unlabelled frame for screen readers.
+    iframe.title = facade.dataset.videoTitle ?? 'Vídeo da aula';
+    iframe.allow =
+      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+
+    facade.replaceChildren(iframe);
+    facade.style.backgroundImage = 'none';
+    // Keyboard users pressed a button that no longer exists; move focus into the
+    // player so they are not dumped back at the top of the document.
+    iframe.focus();
+  });
+</script>

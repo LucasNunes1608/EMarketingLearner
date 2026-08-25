@@ -1,18 +1,122 @@
 ---
 import { SITE } from '@/config/site';
-import '@/styles/global.css';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import {
+  coursePath,
+  formatDuration,
+  getCourseDurationSeconds,
+  getLessonsForCourse,
+  getPublishedCourses,
+  levelLabel,
+} from '@/lib/content';
+import { loadContent } from '@/lib/content-loader';
+
+const { courses, lessons } = await loadContent();
+
+const catalog = getPublishedCourses(courses).map((course) => {
+  const courseLessons = getLessonsForCourse(lessons, course.id);
+  return {
+    id: course.id,
+    title: course.data.title,
+    description: course.data.description,
+    level: levelLabel(course.data.level),
+    href: coursePath(course.id),
+    lessonCount: courseLessons.length,
+    duration: formatDuration(getCourseDurationSeconds(courseLessons)),
+  };
+});
 ---
 
-<html lang={SITE.lang}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{SITE.name}</title>
-  </head>
-  <body>
-    <main>
-      <h1>{SITE.name}</h1>
-      <p>{SITE.tagline}</p>
-    </main>
-  </body>
-</html>
+<BaseLayout title={SITE.name} description={SITE.description} bareTitle>
+  <section class="bg-brand-50">
+    <div class="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+      <h1 class="max-w-3xl text-3xl font-bold text-brand-900 sm:text-4xl">
+        {SITE.tagline}
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-ink-700">
+        Aulas curtas e práticas para quem toca o próprio negócio. Você assiste no celular, no seu
+        tempo, e sai de cada aula com uma tarefa feita.
+      </p>
+
+      <ul class="mt-6 flex flex-wrap gap-2 text-sm font-medium">
+        <li class="rounded-full bg-white px-3 py-1 text-brand-800">100% gratuito</li>
+        <li class="rounded-full bg-white px-3 py-1 text-brand-800">Sem cadastro</li>
+        <li class="rounded-full bg-white px-3 py-1 text-brand-800">Sem mensalidade</li>
+      </ul>
+
+      {
+        catalog.length > 0 && catalog[0] && (
+          <a
+            href={catalog[0].href}
+            class="mt-8 inline-block rounded-lg bg-brand-700 px-6 py-3 font-semibold text-white no-underline hover:bg-brand-800"
+          >
+            Começar agora
+          </a>
+        )
+      }
+    </div>
+  </section>
+
+  {/* Populated from localStorage on the client; stays hidden when there is no progress. */}
+  <section
+    id="continue-assistindo"
+    hidden
+    data-continue-section
+    class="mx-auto max-w-5xl px-4 pt-10"
+    aria-labelledby="continue-titulo"
+  >
+    <h2 id="continue-titulo" class="text-xl font-bold text-ink-900">Continue de onde parou</h2>
+    <a
+      data-continue-link
+      href="/"
+      class="mt-3 flex items-center justify-between gap-4 rounded-xl border border-brand-200 bg-brand-50 p-4 no-underline hover:border-brand-400"
+    >
+      <span>
+        <span class="block text-xs font-semibold tracking-wide text-brand-700 uppercase">
+          Retomar
+        </span>
+        <span class="mt-1 block font-semibold text-ink-900" data-continue-title></span>
+      </span>
+      <span aria-hidden="true" class="text-2xl text-brand-700">→</span>
+    </a>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-4 py-12" aria-labelledby="cursos-titulo">
+    <h2 id="cursos-titulo" class="text-2xl font-bold text-ink-900">Cursos</h2>
+
+    {
+      catalog.length === 0 ? (
+        <p class="mt-4 text-ink-700">Nenhum curso publicado ainda. Volte em breve.</p>
+      ) : (
+        <ul class="mt-6 grid gap-5 sm:grid-cols-2">
+          {catalog.map((course) => (
+            <li class="rounded-xl border border-ink-100 bg-surface p-5 transition-colors hover:border-brand-400">
+              <div class="flex items-center gap-2 text-xs font-semibold text-brand-700">
+                <span class="rounded bg-brand-50 px-2 py-1">{course.level}</span>
+                <span class="text-ink-500">
+                  {course.lessonCount} {course.lessonCount === 1 ? 'aula' : 'aulas'} ·{' '}
+                  {course.duration}
+                </span>
+              </div>
+
+              <h3 class="mt-3 text-lg font-bold">
+                <a class="text-ink-900 no-underline hover:text-brand-800" href={course.href}>
+                  {course.title}
+                </a>
+              </h3>
+
+              <p class="mt-2 text-ink-700">{course.description}</p>
+
+              {/* Filled in by the progress script; hidden until there is something to show. */}
+              <p
+                class="mt-3 text-sm font-medium text-brand-700"
+                hidden
+                data-course-progress-summary={course.id}
+              />
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+</BaseLayout>
