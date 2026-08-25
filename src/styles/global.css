@@ -1,0 +1,204 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens.
+ *
+ * Every colour pairing used for text has been checked against WCAG 2.2 AA
+ * (4.5:1 for body text, 3:1 for large text and UI boundaries):
+ *   brand-700 (#0f6b47) on white ......... 6.5:1
+ *   white on brand-700 ................... 6.5:1
+ *   ink-500  (#5f6d66) on white .......... 5.4:1
+ *   ink-900  (#14201a) on white .......... 16.9:1
+ *   accent-700 (#b45309) on white ........ 5.1:1
+ * If you change a colour, re-check the pairing before shipping.
+ */
+@theme {
+  --color-brand-50: #eefbf3;
+  --color-brand-100: #d6f5e3;
+  --color-brand-200: #b0eacb;
+  --color-brand-300: #7cd9ab;
+  --color-brand-400: #46c085;
+  --color-brand-500: #22a06b;
+  --color-brand-600: #17835a;
+  --color-brand-700: #0f6b47;
+  --color-brand-800: #0b5537;
+  --color-brand-900: #08432c;
+
+  --color-ink-900: #14201a;
+  --color-ink-700: #3c4a43;
+  --color-ink-500: #5f6d66;
+  --color-ink-300: #9aa8a1;
+  --color-ink-100: #e3e9e6;
+
+  --color-accent-500: #f59e0b;
+  --color-accent-700: #b45309;
+
+  --color-surface: #ffffff;
+  --color-surface-alt: #f6f8f7;
+
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --radius-card: 0.75rem;
+}
+
+/*
+ * Base layer. Kept deliberately small — no webfont is loaded anywhere in this
+ * project. System fonts render instantly, cost zero bytes of bandwidth, and
+ * already look native on the Android devices most of our learners use.
+ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  h1,
+  h2,
+  h3 {
+    line-height: 1.2;
+    text-wrap: balance;
+    font-weight: 700;
+  }
+
+  /* A single, consistent, always-visible focus indicator. Never remove this. */
+  :focus-visible {
+    outline: 3px solid var(--color-brand-700);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Respect the OS-level motion preference (WCAG 2.3.3). */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Windows High Contrast / forced-colors: keep boundaries visible. */
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}
+
+@layer components {
+  /* Keyboard users land here first; visually hidden until focused. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    padding: 0.75rem 1.25rem;
+    background-color: var(--color-brand-700);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .skip-link:focus {
+    left: 0.5rem;
+    top: 0.5rem;
+  }
+
+  /*
+   * Lesson body typography. Hand-written rather than pulling in
+   * @tailwindcss/typography: ~40 lines here replaces a dependency, and it lets us
+   * guarantee the contrast ratios documented above.
+   */
+  .prose {
+    max-width: 68ch;
+    color: var(--color-ink-900);
+  }
+
+  .prose > * + * {
+    margin-block-start: 1.1em;
+  }
+
+  .prose h2 {
+    margin-block-start: 2em;
+    font-size: 1.5rem;
+    color: var(--color-brand-800);
+  }
+
+  .prose h3 {
+    margin-block-start: 1.6em;
+    font-size: 1.2rem;
+  }
+
+  .prose ul,
+  .prose ol {
+    padding-inline-start: 1.5rem;
+  }
+
+  .prose ul {
+    list-style: disc;
+  }
+
+  .prose ol {
+    list-style: decimal;
+  }
+
+  .prose li + li {
+    margin-block-start: 0.4em;
+  }
+
+  .prose a {
+    color: var(--color-brand-700);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .prose a:hover {
+    color: var(--color-brand-900);
+  }
+
+  .prose strong {
+    font-weight: 700;
+  }
+
+  .prose blockquote {
+    border-inline-start: 4px solid var(--color-brand-300);
+    padding-inline-start: 1rem;
+    color: var(--color-ink-700);
+    font-style: italic;
+  }
+
+  .prose code {
+    background-color: var(--color-surface-alt);
+    padding: 0.125rem 0.35rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+  }
+
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .prose th,
+  .prose td {
+    border: 1px solid var(--color-ink-100);
+    padding: 0.5rem 0.75rem;
+    text-align: start;
+  }
+
+  .prose th {
+    background-color: var(--color-surface-alt);
+  }
+}
