@@ -1,0 +1,35 @@
+---
+import { SITE } from '@/config/site';
+
+const socials = [
+  { href: SITE.links.youtube, label: 'YouTube' },
+  { href: SITE.links.instagram, label: 'Instagram' },
+  { href: SITE.links.whatsapp, label: 'WhatsApp' },
+].filter((link) => link.href.length > 0);
+---
+
+<footer class="mt-16 border-t border-ink-100 bg-surface-alt">
+  <div class="mx-auto max-w-5xl px-4 py-8 text-sm text-ink-700">
+    <p class="font-semibold text-ink-900">{SITE.name}</p>
+    <p class="mt-1 max-w-prose">{SITE.description}</p>
+
+    {
+      socials.length > 0 && (
+        <ul class="mt-4 flex flex-wrap gap-4">
+          {socials.map((link) => (
+            <li>
+              <a class="text-brand-700 underline underline-offset-2" href={link.href}>
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <p class="mt-6 text-ink-500">
+      Seu progresso fica salvo apenas neste aparelho. Não pedimos cadastro e não guardamos seus
+      dados em nenhum servidor.
+    </p>
+  </div>
+</footer>

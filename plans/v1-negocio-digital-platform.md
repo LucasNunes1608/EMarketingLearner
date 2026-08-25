@@ -168,19 +168,20 @@ Architecture notes for whoever continues:
 
 ## Phase 3: Core UI & Pluggable Video
 
-Status: Not started
+Status: Complete
 
-- [ ] `BaseLayout.astro`: `<html lang="pt-BR">`, skip-link, semantic landmarks, meta/OG tags
-- [ ] Home page: hero, course catalog, "continue de onde parou" slot
-- [ ] Course page `/curso/[slug]`: lesson list with per-lesson completion state + progress bar
-- [ ] Lesson page `/curso/[curso]/[aula]`: video, body, worksheet download, prev/next, mark-complete
-- [ ] `src/lib/video/types.ts`: `VideoSource` discriminated union (`youtube` today, seam for `hls`)
-- [ ] `VideoPlayer.astro` dispatching on `provider`; `YouTubeFacade.astro` implementing
-      click-to-load with `youtube-nocookie.com`, poster from `i.ytimg.com`,
-      keyboard-operable play button with an accessible name
-- [ ] Mobile-first responsive layout; no layout shift on video load (aspect-ratio box)
-- [ ] Unit test: provider dispatch returns the right embed URL and never emits a
+- [x] `BaseLayout.astro`: `<html lang="pt-BR">`, skip-link, semantic landmarks, meta/OG tags
+- [x] Home page: hero, course catalog, "continue de onde parou" slot
+- [x] Course page `/curso/[slug]`: lesson list with per-lesson completion state + progress bar
+- [x] Lesson page `/curso/[curso]/[aula]`: video, body, worksheet link, prev/next, mark-complete
+- [x] `src/lib/video/embed.ts`: `VideoSource` dispatch (`youtube` today, seam for `hls`)
+- [x] `VideoPlayer.astro` implementing the click-to-load facade with
+      `youtube-nocookie.com`, poster from `i.ytimg.com`, keyboard-operable play button
+      with an accessible name
+- [x] Mobile-first responsive layout; no layout shift on video load (aspect-ratio box)
+- [x] Unit test: provider dispatch returns the right embed URL and never emits a
       `youtube.com` (cookie-setting) origin
+- [x] Bonus: printable worksheet route `/ficha/[ficha]` with a print stylesheet
 
 ### Verification Plan
 
@@ -188,9 +189,40 @@ Status: Not started
 - `npm run build` emits the course route and 6 lesson routes
 - `grep -r "www.youtube.com" dist/` returns no matches (only `youtube-nocookie.com` allowed)
 
+**Result (verified):** `npm run test` → 82/82 passing (16 new video-embed tests).
+`npm run check` → 0 errors, 0 warnings. `npm run lint` → clean. `npm run build` → 14 pages
+(home + 1 course + 6 lessons + 6 worksheets). Cookie-origin grep over `dist/` → **no
+matches for `www.youtube.com`**; `youtube-nocookie` present on lesson pages. Lesson HTML
+confirmed to contain the rendered MDX body (938 words of visible text on lesson 1).
+
 ### Phase Summary
 
-_(write when phase completes)_
+All learner-facing routes render. The site is fully usable end to end, minus the
+progress/search/offline features that Phase 4 adds.
+
+Key decisions:
+
+- **The video facade is the centrepiece.** Nothing from YouTube loads until the learner
+  presses play — no iframe, no ~1 MB player bundle, no cookies. Three payoffs: fast on weak
+  mobile connections, zero data spent by learners who only read the text, and **no LGPD
+  consent banner needed** because no third-party cookie is set on load. A unit test asserts
+  the hostname is `www.youtube-nocookie.com` and a `dist/` grep proves no cookie-setting
+  origin ships. Treat both as regression guards, not decoration.
+- **The poster is a CSS `background-image` over a brand gradient, not an `<img>`.** A
+  thumbnail that 404s — as every `AULA…` placeholder does — degrades to something
+  deliberate-looking rather than a broken-image icon. No JS error handling needed.
+- **Focus is moved into the iframe after the swap**, because the button the keyboard user
+  activated no longer exists and focus would otherwise reset to the document top.
+- **Two type layers, on purpose.** `@/lib/content` exposes a minimal structural
+  `Entry<T>` (`{id, data}`) so unit tests can build fixtures by hand. Astro pages instead
+  type props as `CollectionEntry<'lessons'>` because `render()` needs `collection` and
+  `rendered`. `CollectionEntry` structurally satisfies `Entry<T>`, so helpers accept both.
+  Using the narrow type in a page is the one thing that breaks — that was the only
+  `astro check` failure in this phase.
+- **Pagefind's "Indexed N words" is vocabulary size, not total words.** 1067 for ~6000
+  words of Portuguese is correct; it is not evidence of missing content.
+- Progress UI is present in the markup but inert: elements carry `data-*` hooks and start
+  `hidden`, so the no-JS experience is coherent and Phase 4 only has to wire behaviour.
 
 ---
 

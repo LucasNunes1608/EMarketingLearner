@@ -1,0 +1,63 @@
+---
+import SiteFooter from '@/components/SiteFooter.astro';
+import SiteHeader from '@/components/SiteHeader.astro';
+import { SITE } from '@/config/site';
+import '@/styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** When true the title is used verbatim instead of having the site name appended. */
+  bareTitle?: boolean;
+  /** Hide chrome — used by the printable certificate. */
+  chrome?: boolean;
+}
+
+const { title, description = SITE.description, bareTitle = false, chrome = true } = Astro.props;
+
+const pageTitle = bareTitle ? title : `${title} — ${SITE.name}`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
+---
+
+<!doctype html>
+<html lang={SITE.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+
+    <meta name="theme-color" content="#0f6b47" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!--
+      Preconnect only to the thumbnail CDN. The video origin is deliberately not
+      preconnected: no connection to YouTube is opened until the learner presses
+      play on the facade.
+    -->
+    <link rel="preconnect" href="https://i.ytimg.com" crossorigin />
+  </head>
+
+  <body class="flex min-h-screen flex-col">
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    {chrome && <SiteHeader />}
+
+    <main id="conteudo" class="flex-1">
+      <slot />
+    </main>
+
+    {chrome && <SiteFooter />}
+  </body>
+</html>

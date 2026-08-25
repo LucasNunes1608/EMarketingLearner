@@ -6,3 +6,11 @@ playwright-report
 test-results
 public/pagefind
 package-lock.json
+
+# Authored prose is never reformatted.
+#
+# Worksheets use runs of underscores as fill-in-the-blank fields. Prettier reads
+# `____:____` as Markdown bold and an underscore-only line as a horizontal rule,
+# and rewrites both — silently destroying the printable exercise. Content is
+# hand-authored and reviewed by a human; leave it exactly as written.
+src/content/

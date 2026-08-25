@@ -1,0 +1,51 @@
+---
+import { SITE } from '@/config/site';
+
+const path = Astro.url.pathname;
+const isHome = path === '/' || path === '';
+
+const navItems = [
+  { href: '/', label: 'Início', current: isHome },
+  { href: '/buscar', label: 'Buscar', current: path.startsWith('/buscar') },
+];
+---
+
+<header class="border-b border-ink-100 bg-surface">
+  <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+    <a
+      href="/"
+      class="flex items-center gap-2 text-lg font-bold text-brand-800 no-underline"
+      aria-label={`${SITE.name} — página inicial`}
+    >
+      <span
+        aria-hidden="true"
+        class="grid h-8 w-8 place-items-center rounded-lg bg-brand-700 text-base font-bold text-white"
+        >ND</span
+      >
+      <span>{SITE.name}</span>
+    </a>
+
+    <nav aria-label="Navegação principal">
+      <ul class="flex items-center gap-1 text-sm font-medium">
+        {
+          navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={item.current ? 'page' : undefined}
+                class:list={[
+                  'block rounded-md px-3 py-2 no-underline transition-colors',
+                  item.current
+                    ? 'bg-brand-50 text-brand-800'
+                    : 'text-ink-700 hover:bg-surface-alt hover:text-brand-800',
+                ]}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>
