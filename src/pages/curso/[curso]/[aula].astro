@@ -52,7 +52,12 @@ const { Content } = await render(lesson);
 ---
 
 <BaseLayout title={lesson.data.title} description={lesson.data.summary}>
-  <article class="mx-auto max-w-3xl px-4 py-8" data-lesson={slug} data-lesson-course={course.id}>
+  <article
+    class="mx-auto max-w-3xl px-4 py-8"
+    data-lesson={slug}
+    data-lesson-course={course.id}
+    data-pagefind-body
+  >
     <nav aria-label="Trilha de navegação" class="text-sm">
       <ol class="flex flex-wrap items-center gap-2 text-ink-500">
         <li><a class="text-brand-700 underline underline-offset-2" href="/">Início</a></li>

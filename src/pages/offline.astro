@@ -1,0 +1,23 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Você está sem internet"
+  description="Esta página aparece quando não há conexão disponível."
+>
+  <div class="mx-auto max-w-2xl px-4 py-16 text-center" data-pagefind-ignore>
+    <h1 class="text-3xl font-bold text-ink-900">Você está sem internet</h1>
+    <p class="mt-4 text-lg text-ink-700">
+      Não conseguimos carregar esta página agora. As aulas que você já abriu continuam disponíveis
+      mesmo sem conexão — o texto e a folha de exercício ficam salvos no seu aparelho.
+    </p>
+    <p class="mt-3 text-ink-700">Os vídeos precisam de internet para tocar.</p>
+    <a
+      href="/"
+      class="mt-8 inline-block rounded-lg bg-brand-700 px-6 py-3 font-semibold text-white no-underline hover:bg-brand-800"
+    >
+      Voltar para o início
+    </a>
+  </div>
+</BaseLayout>

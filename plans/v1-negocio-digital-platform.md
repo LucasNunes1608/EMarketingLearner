@@ -228,19 +228,20 @@ Key decisions:
 
 ## Phase 4: Progress, Certificate, Search, Offline
 
-Status: Not started
+Status: Complete
 
-- [ ] `src/lib/progress.ts`: pure, serializable state — `toggleLesson`, `isComplete`,
+- [x] `src/lib/progress.ts`: pure, serializable state — `toggleLesson`, `isComplete`,
       `courseProgress`, `lastWatched`, versioned schema with a migration path
-- [ ] `src/lib/progress-store.ts`: localStorage wrapper, `try/catch` on every read AND write
+- [x] `src/lib/progress-store.ts`: localStorage wrapper, `try/catch` on every read AND write
       (private browsing and blocked-storage contexts throw), graceful no-op fallback
-- [ ] Wire progress into course/lesson pages + "continue de onde parou" on home
-- [ ] Certificate route `/certificado/[curso]`: gated on course completion, name from a
+- [x] Wire progress into course/lesson pages + "continue de onde parou" on home
+- [x] Certificate route `/certificado/[curso]`: gated on course completion, name from a
       local input, print stylesheet (A4 landscape), zero JS deps
-- [ ] Integrate Pagefind: index built post-`astro build`, search page + keyboard-accessible UI
-- [ ] Add PWA service worker: precache HTML/CSS/JS/worksheets, exclude YouTube origins,
+- [x] Integrate Pagefind: index built post-`astro build`, search page + keyboard-accessible UI
+- [x] Add PWA service worker: runtime caching, excludes YouTube origins,
       offline fallback page in pt-BR
-- [ ] Unit tests for progress logic incl. corrupted-JSON and throwing-storage cases
+- [x] Unit tests for progress logic incl. corrupted-JSON and throwing-storage cases
+- [x] Bonus: `npm run icons` generates the PWA PNG icons from SVG via sharp
 
 ### Verification Plan
 
@@ -249,35 +250,95 @@ Status: Not started
 - `npm run build` produces the Pagefind bundle and a service worker in `dist/`
 - Playwright E2E: complete all 6 lessons → certificate route becomes reachable
 
+**Result (verified):** `npm run test` → 128/128 across 6 files (46 new: 35 progress,
+11 progress-store), covering corrupt JSON, non-object payloads, throwing storage,
+de-duplication and version migration. `npm run build` → 17 pages, `dist/pagefind/pagefind.js`,
+`dist/sw.js`, `dist/manifest.webmanifest` and three PNG icons all emitted; Pagefind indexed
+7 pages. E2E confirms the certificate unlocks only after all six lessons.
+
 ### Phase Summary
 
-_(write when phase completes)_
+Progress, certificate, search and offline all work, and the site still costs nothing to run.
+
+Key decisions:
+
+- **`parseProgress` never throws, whatever it is handed.** Corrupt JSON, a JSON array, a
+  bare number, non-string lesson ids, a malformed last-watched record — all degrade to
+  valid state. With no server-side backup, a stored blob that crashes the lesson page would
+  be unrecoverable for that learner; losing a few checkmarks is the far better failure.
+- **Storage access is wrapped, not just get/set.** Reading `globalThis.localStorage` itself
+  throws in blocked-storage contexts, so `getBrowserStorage()` probes with a real write and
+  returns `null` on failure. The UI then reports honestly ("Não foi possível salvar…")
+  instead of silently pretending to save.
+- **`isCourseComplete` takes the lesson total as an argument** rather than reading a
+  catalog. Removing a lesson therefore cannot strand someone at 5/6 forever.
+- **Certificate uses `window.print()`, no PDF library.** jsPDF would add ~350 KB to a page
+  served to people on mobile data, to replicate what the browser already does.
+- **Offline caching is runtime-only, plus a `cache-page` message.** Precaching all six
+  lessons would spend data the learner never agreed to spend. But the first visit installs
+  a worker that did not intercept that navigation, so the page explicitly asks to be cached
+  once the worker is active — otherwise the lesson you are reading right now would vanish
+  on reload after losing signal. The worker never touches cross-origin requests, so video
+  is entirely outside its control.
+- **Pagefind typing gotcha:** `/pagefind/pagefind.js` does not exist at type-check time and
+  an ambient `declare module` cannot fix it — TypeScript only accepts those for bare module
+  names, not absolute paths. Solution is `src/types/pagefind.ts`: an exported interface plus
+  a `PAGEFIND_BUNDLE_URL` constant, imported through a variable specifier so neither tsc nor
+  Vite tries to resolve it early.
+- Only lesson and course pages carry `data-pagefind-body`, so search returns 7 clean results
+  rather than duplicating each lesson with its worksheet.
 
 ---
 
 ## Phase 5: Accessibility, Performance & E2E
 
-Status: Not started
+Status: Complete
 
-- [ ] WCAG 2.2 AA pass: contrast ≥ 4.5:1, visible focus, logical heading order,
+- [x] WCAG 2.2 AA pass: contrast ≥ 4.5:1, visible focus, logical heading order,
       keyboard-operable controls, `prefers-reduced-motion`, form labels, `aria-live` on
       progress updates
-- [ ] Playwright E2E journeys: browse catalog → open lesson → play video (facade swaps to
+- [x] Playwright E2E journeys: browse catalog → open lesson → play video (facade swaps to
       iframe) → mark complete → progress persists across reload → search finds a lesson
-- [ ] `@axe-core/playwright` assertions with zero serious/critical violations on
-      home, course, lesson, search, and certificate pages
-- [ ] Performance budget check: no page ships > 100 KB of JS before video interaction
-- [ ] Verify offline behaviour in Playwright (`context.setOffline(true)` → lesson text renders)
+- [x] `@axe-core/playwright` assertions with zero serious/critical violations on
+      home, course, lesson, worksheet, search, certificate and offline pages
+- [x] Performance budget check: no page ships > 100 KB of JS before video interaction
+- [x] Verify offline behaviour in Playwright (`context.setOffline(true)` → lesson text renders)
 
 ### Verification Plan
 
 - `npm run test:e2e` exits 0 with all journeys green
-- axe assertions report 0 serious/critical violations across all 5 page types
+- axe assertions report 0 serious/critical violations across all page types
 - JS budget assertion passes in the E2E suite
+
+**Result (verified):** `npx playwright test` → **60/60 passing** across two projects
+(desktop-chromium and mobile-chromium / Pixel 7). Zero serious or critical axe violations on
+all seven page types plus the unlocked certificate. JS budget assertion passes.
 
 ### Phase Summary
 
-_(write when phase completes)_
+Two real bugs were found by these tests and fixed — which is the point of writing them:
+
+1. **13 critical axe violations on every worksheet.** GitHub-flavoured Markdown renders
+   `- [ ]` as a disabled `<input type="checkbox">` with no label. Fixed at build time with
+   `src/lib/rehype-worksheet-checkboxes.ts`, which rewrites those inputs into decorative
+   spans that CSS draws as empty squares. This is also strictly better for the worksheet's
+   actual purpose: a browser renders a disabled checkbox greyed out, which reads as "you
+   cannot use this" on a sheet meant to be filled in with a pen.
+2. **Offline did not work on first visit.** The service worker installs during a navigation
+   it did not intercept, so that page had no cached copy — reload after losing signal
+   showed the offline fallback instead of the lesson. Fixed with the `cache-page` message
+   described in Phase 4.
+
+Notes for future work:
+
+- Axe catches roughly a third of WCAG issues. It is a regression net, not a substitute for
+  judgement — focus order, meaningful alt text and whether the Portuguese actually reads
+  clearly to a small shop owner still need a human.
+- The JS budget test (< 100 KB before interaction) is the guard on the whole cost/perf
+  thesis. If it fails, something heavy was added; weigh it against learners' mobile data
+  before raising the limit.
+- E2E runs against the **real static build**, not the dev server, so what CI verifies is
+  byte-for-byte what Cloudflare Pages serves.
 
 ---
 

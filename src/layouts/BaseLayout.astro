@@ -59,5 +59,36 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
     </main>
 
     {chrome && <SiteFooter />}
+
+    <script>
+      import { initProgressUi } from '@/scripts/progress-ui';
+
+      initProgressUi();
+    </script>
+
+    <script>
+      // Offline support. Registration is deliberately best-effort: a failure here
+      // must never affect the page, and the site works fine without it.
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          void (async () => {
+            try {
+              await navigator.serviceWorker.register('/sw.js');
+              const registration = await navigator.serviceWorker.ready;
+              // The first navigation is not intercepted by a worker that did not
+              // exist yet, so ask it to cache this page explicitly. Without this,
+              // the lesson you are reading right now would not survive going
+              // offline until you visited it a second time.
+              registration.active?.postMessage({
+                type: 'cache-page',
+                url: window.location.href,
+              });
+            } catch {
+              /* offline support unavailable — not worth surfacing to a learner */
+            }
+          })();
+        });
+      }
+    </script>
   </body>
 </html>

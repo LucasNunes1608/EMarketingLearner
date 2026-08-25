@@ -38,9 +38,17 @@ export default tseslint.config(
     },
   },
   {
-    files: ['tests/**/*.ts', '*.config.{ts,js,mjs}'],
+    files: ['tests/**/*.ts', '*.config.{ts,js,mjs}', 'scripts/**/*.mjs'],
     rules: {
       'no-console': 'off',
+    },
+  },
+  {
+    // The service worker runs in its own global scope, not the window's.
+    files: ['public/sw.js'],
+    languageOptions: {
+      globals: { ...globals.serviceworker },
+      sourceType: 'script',
     },
   }
 );
