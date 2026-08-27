@@ -9,6 +9,7 @@ import {
   getPublishedCourses,
   lessonPath,
   lessonSlug,
+  worksheetPath,
 } from '@/lib/content';
 import { loadContent } from '@/lib/content-loader';
 import { type CollectionEntry, render } from 'astro:content';
@@ -107,7 +108,7 @@ const { Content } = await render(lesson);
             Imprima ou responda pelo celular. Dá para mandar no WhatsApp de quem trabalha com você.
           </p>
           <a
-            href={`/ficha/${worksheet.id}`}
+            href={worksheetPath(worksheet.id)}
             class="mt-3 inline-block rounded-lg bg-brand-700 px-4 py-2 font-semibold text-white no-underline hover:bg-brand-800"
           >
             Abrir a folha de exercício

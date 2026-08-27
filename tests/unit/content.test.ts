@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   assertContentIntegrity,
+  certificatePath,
   completionPercent,
   type CourseEntry,
+  coursePath,
   formatDuration,
   getAdjacentLessons,
   getCourseDurationSeconds,
@@ -13,6 +15,7 @@ import {
   lessonPath,
   lessonSlug,
   type WorksheetEntry,
+  worksheetPath,
 } from '@/lib/content';
 
 const COURSE = 'colocando-seu-negocio-no-digital';
@@ -189,11 +192,36 @@ describe('completionPercent', () => {
   });
 });
 
-describe('lessonPath', () => {
-  it('builds a URL matching the routing structure', () => {
+describe('path helpers', () => {
+  // Trailing slashes are load-bearing: build.format is 'directory', so the
+  // slash-less form is a 308 redirect on Cloudflare and costs an extra round
+  // trip on every internal navigation.
+  it('builds a lesson URL matching the routing structure', () => {
     expect(lessonPath(COURSE, '01-google-meu-negocio')).toBe(
-      '/curso/colocando-seu-negocio-no-digital/01-google-meu-negocio'
+      '/curso/colocando-seu-negocio-no-digital/01-google-meu-negocio/'
     );
+  });
+
+  it('builds a course URL', () => {
+    expect(coursePath(COURSE)).toBe('/curso/colocando-seu-negocio-no-digital/');
+  });
+
+  it('builds a certificate URL', () => {
+    expect(certificatePath(COURSE)).toBe('/certificado/colocando-seu-negocio-no-digital/');
+  });
+
+  it('builds a worksheet URL', () => {
+    expect(worksheetPath('01-google-meu-negocio')).toBe('/ficha/01-google-meu-negocio/');
+  });
+
+  it('ends every generated path with a slash, so none of them redirect', () => {
+    const paths = [
+      coursePath(COURSE),
+      lessonPath(COURSE, '01-google-meu-negocio'),
+      certificatePath(COURSE),
+      worksheetPath('01-google-meu-negocio'),
+    ];
+    for (const path of paths) expect(path.endsWith('/')).toBe(true);
   });
 });
 

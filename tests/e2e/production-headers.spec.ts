@@ -126,6 +126,41 @@ test.describe('search under the production CSP', () => {
   });
 });
 
+test.describe('internal links', () => {
+  /**
+   * Cloudflare 308-redirects `/curso/slug` to `/curso/slug/`, so a slash-less
+   * internal link costs an extra round trip on every navigation — paid by an
+   * audience on mobile data. The path helpers in src/lib/content.ts emit the
+   * canonical trailing-slash form; this keeps a hand-written link from quietly
+   * reintroducing the redirect.
+   */
+  for (const from of [
+    '/',
+    '/curso/colocando-seu-negocio-no-digital/',
+    '/curso/colocando-seu-negocio-no-digital/01-google-meu-negocio/',
+  ]) {
+    test(`every internal link on ${from} resolves without a redirect`, async ({ page }) => {
+      await page.goto(from);
+
+      const hrefs = await page
+        .locator('a[href^="/"]')
+        .evaluateAll((links) =>
+          Array.from(new Set(links.map((a) => a.getAttribute('href') ?? '')))
+        );
+
+      expect(hrefs.length, `no internal links found on ${from}`).toBeGreaterThan(0);
+
+      for (const href of hrefs) {
+        const response = await page.request.get(href, { maxRedirects: 0 });
+        expect(
+          response.status(),
+          `${href} answered ${response.status()} — it should be reached directly, not via a redirect`
+        ).toBe(200);
+      }
+    });
+  }
+});
+
 test.describe('missing URLs', () => {
   /**
    * The regression test for bug 2. Cloudflare Pages serves `dist/404.html` with a

@@ -34,16 +34,34 @@ export function lessonSlug(lesson: LessonEntry): string {
   return segments[segments.length - 1] ?? lesson.id;
 }
 
+/*
+ * Every path below ends in a slash.
+ *
+ * `build.format: 'directory'` emits `/curso/slug/index.html`, so the canonical
+ * address of a page is the one with the trailing slash — that is what the
+ * sitemap and the <link rel="canonical"> already advertise. Cloudflare Pages
+ * 308-redirects the slash-less form to it, so a slash-less internal link costs
+ * every navigation an extra round trip. On the mobile connections this audience
+ * actually uses, that round trip is the difference worth removing.
+ *
+ * Build URLs here rather than by hand, so the trailing slash cannot drift back
+ * out of one page and not another.
+ */
+
 export function coursePath(slug: string): string {
-  return `/curso/${slug}`;
+  return `/curso/${slug}/`;
 }
 
 export function lessonPath(course: string, lesson: string): string {
-  return `/curso/${course}/${lesson}`;
+  return `/curso/${course}/${lesson}/`;
 }
 
 export function certificatePath(course: string): string {
-  return `/certificado/${course}`;
+  return `/certificado/${course}/`;
+}
+
+export function worksheetPath(worksheet: string): string {
+  return `/ficha/${worksheet}/`;
 }
 
 /** Published courses, ordered for the catalog. */
