@@ -277,13 +277,32 @@ test.describe('licensing', () => {
     }
   });
 
-  test('every licence link leaves the browsing context behind', async ({ page }) => {
+  test('licence links send no referrer', async ({ page }) => {
     await page.goto('/');
     const links = page.locator('[data-licence] a');
 
     await expect(links).not.toHaveCount(0);
     for (const link of await links.all()) {
-      await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+      // noreferrer only. noopener is inert without target="_blank" and nothing here opens a new
+      // context. This is not redundant with Referrer-Policy, which still sends the origin.
+      await expect(link).toHaveAttribute('rel', 'noreferrer');
     }
+  });
+
+  /**
+   * Regression guard. Review caught the first draft stating only two of CC BY-NC-SA's three
+   * conditions and overstating AGPL section 13 as publication to the world. Both understate or
+   * misstate the licences to a reuser, which is a legal defect rather than a wording nitpick.
+   */
+  test('the summary states every licence condition accurately', async ({ page }) => {
+    await page.goto('/');
+    const licence = page.locator('[data-licence]');
+
+    await expect(licence).toContainText('dê crédito');
+    await expect(licence).toContainText('fins comerciais');
+    await expect(licence).toContainText('mantenha a mesma licença');
+
+    // Section 13 obliges an offer to that instance's users, not publication to the world.
+    await expect(licence).toContainText('oferecer o código');
   });
 });
