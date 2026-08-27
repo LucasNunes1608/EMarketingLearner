@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Free video course platform teaching Brazilian small entrepreneurs practical digital skills.",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=20.11.0"
   },
