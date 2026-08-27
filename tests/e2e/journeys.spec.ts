@@ -233,13 +233,18 @@ test.describe('offline support', () => {
   });
 });
 
+/**
+ * Footer licensing. The statement itself moved to /licenca/ when the inline copy
+ * grew to 38% of a phone viewport, so what the footer owes is narrower now: the
+ * offer of source on every route, and a way through to the detail.
+ *
+ * The accuracy guards that used to live here — all three CC conditions, and
+ * section 13 as an offer rather than publication — moved with the prose to
+ * tests/e2e/licence.spec.ts, where they assert against the text a reuser actually
+ * reads and are stronger for it.
+ */
 test.describe('licensing', () => {
-  const AGPL = 'https://www.gnu.org/licenses/agpl-3.0.html';
-  const CC = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.pt-BR';
-
-  test('the footer offers the source and names the licence over each half of the site', async ({
-    page,
-  }) => {
+  test('the footer offers the source and points at the licence detail', async ({ page }) => {
     await page.goto('/');
     const licence = page.locator('[data-licence]');
 
@@ -248,10 +253,9 @@ test.describe('licensing', () => {
       'href',
       /^https:\/\/github\.com\/.+/
     );
-    await expect(licence.getByRole('link', { name: 'AGPL-3.0' })).toHaveAttribute('href', AGPL);
-    await expect(licence.getByRole('link', { name: 'CC BY-NC-SA 4.0' })).toHaveAttribute(
+    await expect(licence.getByRole('link', { name: /licença e reúso/i })).toHaveAttribute(
       'href',
-      CC
+      '/licenca/'
     );
   });
 
@@ -277,9 +281,12 @@ test.describe('licensing', () => {
     }
   });
 
-  test('licence links send no referrer', async ({ page }) => {
+  test('external licence links send no referrer', async ({ page }) => {
     await page.goto('/');
-    const links = page.locator('[data-licence] a');
+
+    // Scoped to external links: the footer now also holds an internal link to
+    // /licenca/, and rel="noreferrer" on a same-origin link buys nothing.
+    const links = page.locator('[data-licence] a[href^="http"]');
 
     await expect(links).not.toHaveCount(0);
     for (const link of await links.all()) {
@@ -287,23 +294,6 @@ test.describe('licensing', () => {
       // context. This is not redundant with Referrer-Policy, which still sends the origin.
       await expect(link).toHaveAttribute('rel', 'noreferrer');
     }
-  });
-
-  /**
-   * Regression guard. Review caught the first draft stating only two of CC BY-NC-SA's three
-   * conditions and overstating AGPL section 13 as publication to the world. Both understate or
-   * misstate the licences to a reuser, which is a legal defect rather than a wording nitpick.
-   */
-  test('the summary states every licence condition accurately', async ({ page }) => {
-    await page.goto('/');
-    const licence = page.locator('[data-licence]');
-
-    await expect(licence).toContainText('dê crédito');
-    await expect(licence).toContainText('fins comerciais');
-    await expect(licence).toContainText('mantenha a mesma licença');
-
-    // Section 13 obliges an offer to that instance's users, not publication to the world.
-    await expect(licence).toContainText('oferecer o código');
   });
 });
 

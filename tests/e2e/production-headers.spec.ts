@@ -139,6 +139,7 @@ test.describe('internal links', () => {
     '/sobre/',
     '/curso/colocando-seu-negocio-no-digital/',
     '/curso/colocando-seu-negocio-no-digital/01-google-meu-negocio/',
+    '/licenca/',
   ]) {
     test(`every internal link on ${from} resolves without a redirect`, async ({ page }) => {
       await page.goto(from);
