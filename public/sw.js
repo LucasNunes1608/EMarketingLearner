@@ -19,7 +19,12 @@
  */
 
 const CACHE = 'negocio-digital-v1';
-const OFFLINE_URL = '/offline';
+// Trailing slash required. Cloudflare Pages 308-redirects '/offline' to '/offline/',
+// and `cache.add()` on a redirecting URL never settles, so `event.waitUntil` in the
+// install handler stayed pending forever and the worker never activated — silently
+// disabling offline support in production. `astro preview` issues no such redirect,
+// which is why local testing never saw it.
+const OFFLINE_URL = '/offline/';
 
 // Kept minimal on purpose — only the shell needed to render the offline fallback.
 const PRECACHE = ['/', OFFLINE_URL];
