@@ -261,4 +261,20 @@ suits this audience far better than a forum nobody visits.
 
 ## Licence
 
-MIT. The course content in `src/content/` is yours to relicense as you prefer.
+Dual licensed, because the code and the content are not the same kind of asset.
+
+The code — everything outside `src/content/` — is **AGPL-3.0-only**. The course content in
+`src/content/` is **CC BY-NC-SA 4.0**. Full texts are in [`LICENSE`](./LICENSE) and
+[`src/content/LICENSE`](./src/content/LICENSE); [`NOTICE`](./NOTICE) is the plain-English
+summary.
+
+The split exists because the code is not the moat and the content is. A static Astro site
+is worth reading and reusing; the lessons and worksheets are the part that took the work,
+and they are meant to stay free for the shop owners they were written for. AGPL rather than
+GPL specifically because nobody _distributes_ a website — they serve it, and AGPL is the one
+that treats serving as distribution and closes that loophole.
+
+Practically, if you fork this: build on the code however you like, but if you run your
+version publicly you have to publish your source under the AGPL, and you cannot sell the
+courses or put them behind a paywall. Want the content for something commercial? Ask —
+NonCommercial is a default, not a refusal.

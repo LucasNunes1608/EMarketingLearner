@@ -1,0 +1,29 @@
+Negócio Digital — licensing notice
+
+This repository is dual licensed. Which licence applies depends on which part
+of the repository you are looking at.
+
+  Code (everything outside src/content/)
+    GNU Affero General Public License v3.0 only — see ./LICENSE
+
+  Course content (everything inside src/content/)
+    Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International —
+    see ./src/content/LICENSE. This covers the lessons, courses and printable
+    worksheets: the Portuguese prose, the exercises and the teaching sequence.
+
+Why the split: the code is an ordinary static Astro site and anyone is welcome
+to learn from it and build on it. The course content is where the real work
+went, and it is meant to stay free for the people it was written for. Splitting
+the licences keeps the software open while stopping the teaching material from
+being repackaged as somebody's paid product.
+
+You may: read, run, fork and modify the code; share and adapt the content for
+non-commercial purposes. You may not: run a modified version of this site as a
+service without publishing your source under the AGPL, or sell the content, put
+it behind a paywall, or use it in paid training.
+
+To attribute: credit "Negócio Digital" and link back to this repository. If you
+adapted the content, say so and release your version under CC BY-NC-SA 4.0.
+
+Want the content for something commercial? Ask. NonCommercial is a default, not
+a refusal, and permission can be granted separately.
