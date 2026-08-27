@@ -2,6 +2,7 @@
 import SiteFooter from '@/components/SiteFooter.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
 import { SITE } from '@/config/site';
+import { getBuildVersion } from '@/lib/build-version';
 import '@/styles/global.css';
 
 interface Props {
@@ -17,6 +18,9 @@ const { title, description = SITE.description, bareTitle = false, chrome = true 
 
 const pageTitle = bareTitle ? title : `${title} — ${SITE.name}`;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
+
+// Resolved once for the whole build; see src/lib/build-version.ts.
+const buildVersion = getBuildVersion();
 ---
 
 <!doctype html>
@@ -24,6 +28,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      Which build served this page. A meta tag rather than anything visible: the
+      audience is shop owners, and a version string in the chrome is noise to them and
+      to nobody's benefit. In `view-source` it is the second line of the head, and
+      `document.querySelector('meta[name="build-version"]').content` reads it from a
+      console, which covers debugging a report. Living in BaseLayout puts it on every
+      route without anyone having to remember it. See src/lib/build-version.ts.
+    -->
+    <meta name="build-version" content={buildVersion} />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
