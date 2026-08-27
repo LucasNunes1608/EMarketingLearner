@@ -306,3 +306,95 @@ test.describe('licensing', () => {
     await expect(licence).toContainText('oferecer o código');
   });
 });
+
+test.describe('about page', () => {
+  test('the site navigation reaches it from anywhere', async ({ page }) => {
+    await page.goto('/');
+
+    await page
+      .getByRole('navigation', { name: 'Navegação principal' })
+      .getByRole('link', { name: 'Sobre' })
+      .click();
+
+    await expect(page).toHaveURL(/\/sobre\/$/);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Sobre');
+  });
+
+  /**
+   * The page exists to answer "why is this free, and what is the catch?" for an audience
+   * that meets a lot of digital-marketing scams. The running cost is the one answer that is
+   * concrete and checkable, so it must survive any future rewrite of the copy.
+   */
+  test('says what the site costs to run, not just that it is free', async ({ page }) => {
+    await page.goto('/sobre/');
+
+    const cost = page.locator('[data-running-cost]');
+    await expect(cost).toBeVisible();
+    // \s+ rather than a literal space: a regex is matched against the raw text, which
+    // still carries the source's line wrapping.
+    await expect(cost).toContainText(/R\$\s?40\s+por\s+ano/i);
+  });
+
+  test('promises no signup, no fee and no data collection', async ({ page }) => {
+    await page.goto('/sobre/');
+
+    const main = page.locator('main');
+    await expect(main).toContainText(/sem cadastro/i);
+    await expect(main).toContainText(/mensalidade/i);
+    await expect(main).toContainText(/aparelho/i);
+  });
+
+  /**
+   * What a learner will be able to do is taken from the published courses rather than
+   * described again by hand, so the promise cannot drift away from the curriculum.
+   */
+  test('lists the published courses and links to each one', async ({ page }) => {
+    await page.goto('/sobre/');
+
+    const courses = page.locator('[data-about-courses] li');
+    await expect(courses).toHaveCount(2);
+    await expect(
+      page.locator('[data-about-courses] a[href="/curso/colocando-seu-negocio-no-digital/"]')
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-about-courses] a[href="/curso/vendendo-mais-no-whatsapp/"]')
+    ).toBeVisible();
+  });
+
+  test('names the author and offers LinkedIn as the way to reach him', async ({ page }) => {
+    await page.goto('/sobre/');
+
+    const author = page.locator('[data-author]');
+    await expect(author).toContainText('Lucas Nunes');
+
+    const linkedin = author.getByRole('link', { name: /LinkedIn/i });
+    await expect(linkedin).toHaveAttribute('href', 'https://www.linkedin.com/in/lucasmnunesk/');
+  });
+
+  /**
+   * His email is known and deliberately withheld: publishing a personal contact detail on a
+   * public page is his call, not ours. LinkedIn is the contact route.
+   */
+  test('publishes no personal email address', async ({ page }) => {
+    await page.goto('/sobre/');
+
+    await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText(/@gmail\.com/i);
+  });
+
+  /**
+   * Same convention as the footer: rel="noreferrer" and nothing else. noopener is inert
+   * without target="_blank", and no link on this site opens a new context.
+   */
+  test('every outbound link sends no referrer and stays in the same tab', async ({ page }) => {
+    await page.goto('/sobre/');
+
+    const external = page.locator('main a[href^="http"]');
+    await expect(external).not.toHaveCount(0);
+
+    for (const link of await external.all()) {
+      await expect(link).toHaveAttribute('rel', 'noreferrer');
+      expect(await link.getAttribute('target')).toBeNull();
+    }
+  });
+});
