@@ -36,7 +36,7 @@ test.describe('catalog and navigation', () => {
   test('the course page lists every published lesson', async ({ page }) => {
     await page.goto(COURSE);
     for (const slug of LESSON_SLUGS) {
-      await expect(page.locator(`a[href$="${slug}"]`).first()).toBeVisible();
+      await expect(page.locator(`a[href$="${slug}/"]`).first()).toBeVisible();
     }
   });
 

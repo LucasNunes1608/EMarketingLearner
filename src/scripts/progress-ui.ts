@@ -1,4 +1,4 @@
-import { completionPercent } from '@/lib/content';
+import { completionPercent, lessonPath } from '@/lib/content';
 import {
   completedCount,
   isCourseComplete,
@@ -130,7 +130,7 @@ function initHomePage(state: ProgressState): void {
   if (section && state.last) {
     const link = section.querySelector<HTMLAnchorElement>('[data-continue-link]');
     const title = section.querySelector<HTMLElement>('[data-continue-title]');
-    if (link) link.href = `/curso/${state.last.course}/${state.last.lesson}`;
+    if (link) link.href = lessonPath(state.last.course, state.last.lesson);
     if (title) title.textContent = state.last.title;
     section.hidden = false;
   }
