@@ -8,22 +8,25 @@ const socials = [
 ].filter((link) => link.href.length > 0);
 
 /**
- * Licensing footnote.
+ * Licensing footnote. The reasoning lives in docs/adr/0010; only what constrains
+ * this file is repeated here.
  *
- * The repository link is the AGPL-3.0 section 13 offer of Corresponding Source, and it lives in
- * the shared footer deliberately: serving a modified version of this site over a network obliges
- * you to give its users the source of YOUR version, so putting the offer in the template every
- * page renders means a fork inherits the mechanism instead of having to remember it. A fork
- * repoints SITE.repository — never the two licence URLs below, which must keep pointing at the
- * licence texts themselves.
+ * The repository link is the AGPL-3.0 section 13 offer of Corresponding Source. It sits in the
+ * shared footer so a fork inherits the mechanism instead of having to remember it. A fork repoints
+ * SITE.repository — never the two licence URLs, which must keep pointing at the licence texts.
  *
- * The second sentence exists because unlabelled content reads as "all rights reserved": a teacher
- * who would happily print the worksheets otherwise never learns that they may.
+ * Wording is load-bearing and was corrected in review, so do not "tidy" it:
+ * - section 13 obliges an offer to the users of THAT instance, not publication to the world, so
+ *   "oferecer o código a quem usar" is correct where "deixar público" would overstate it.
+ * - CC BY-NC-SA has three conditions. Dropping ShareAlike understates the licence and misleads a
+ *   reuser about what adapting the worksheets actually requires.
  *
- * data-pagefind-ignore is belt-and-braces. The footer already escapes the index because
- * data-pagefind-body scopes indexing to the lesson bodies, but this text repeats on all 28 routes,
- * so were that scoping ever to move, every page would become a match for words nobody is searching
- * for. Same reasoning as the attribute on 404.astro and offline.astro.
+ * rel="noreferrer" only. noopener is inert without target="_blank", and nothing here opens a new
+ * context. noreferrer is NOT redundant with the Referrer-Policy header: that header still sends the
+ * origin cross-origin, whereas noreferrer sends nothing.
+ *
+ * data-pagefind-ignore is belt-and-braces — data-pagefind-body already scopes indexing to lesson
+ * bodies, but this text repeats on every route, so it would pollute results if that ever moved.
  */
 const AGPL_URL = 'https://www.gnu.org/licenses/agpl-3.0.html';
 const CC_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.pt-BR';
@@ -56,16 +59,13 @@ const linkClass = 'text-brand-700 underline underline-offset-2';
     </p>
 
     <p class="mt-3 max-w-prose text-ink-500" data-licence data-pagefind-ignore>
-      O código deste site é público e fica no <a
-        class={linkClass}
-        href={SITE.repository}
-        rel="noopener noreferrer">GitHub</a
-      >, sob a licença <a class={linkClass} href={AGPL_URL} rel="noopener noreferrer">AGPL-3.0</a> — quem
-      publicar uma versão modificada precisa deixar o código dela público também. Você pode imprimir,
-      compartilhar e adaptar as aulas e as fichas, desde que dê crédito e não use para fins comerciais:
-      é o que diz a licença <a class={linkClass} href={CC_URL} rel="noopener noreferrer"
-        >CC BY-NC-SA 4.0</a
-      >.
+      O código deste site é público no <a class={linkClass} href={SITE.repository} rel="noreferrer"
+        >GitHub</a
+      >, sob a licença <a class={linkClass} href={AGPL_URL} rel="noreferrer">AGPL-3.0</a> — quem publicar
+      uma versão modificada precisa oferecer o código dela a quem usar. As aulas e as fichas estão sob
+      a licença <a class={linkClass} href={CC_URL} rel="noreferrer">CC BY-NC-SA 4.0</a>: você pode
+      imprimir, compartilhar e adaptar, desde que dê crédito, não use para fins comerciais e
+      mantenha a mesma licença.
     </p>
   </div>
 </footer>
