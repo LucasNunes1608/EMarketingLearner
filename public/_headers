@@ -7,14 +7,20 @@
   X-Frame-Options: DENY
   Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
   Cross-Origin-Opener-Policy: same-origin
-  # script-src stays 'self' because astro.config.ts sets assetsInlineLimit: 0,
-  # so no script is ever inlined into the HTML.
+  # script-src is 'self' because astro.config.ts sets assetsInlineLimit: 0, so no
+  # script is ever inlined into the HTML.
+  # 'wasm-unsafe-eval' is required in addition: Pagefind's search index is a
+  # WebAssembly module, and browsers refuse to instantiate WASM under a bare 'self'.
+  # It permits WASM compilation ONLY — unlike 'unsafe-eval' it does not enable
+  # eval() or new Function(), so the protection against script injection stands.
+  # Removing it silently breaks search in production while local preview keeps
+  # working, because `astro preview` does not apply this file.
   # style-src needs 'unsafe-inline' for the video facade's poster background and
   # the progress bar width, both set as style attributes. Style injection is a far
   # smaller risk than script injection, and script-src remains strict.
   # frame-src allows only the no-cookie YouTube origin; img-src allows only its
   # thumbnail CDN. Nothing else third-party can load.
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com; frame-src https://www.youtube-nocookie.com; connect-src 'self'; font-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com; frame-src https://www.youtube-nocookie.com; connect-src 'self'; font-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; upgrade-insecure-requests
 
 # Astro fingerprints everything in /_astro/, so it can be cached forever.
 /_astro/*

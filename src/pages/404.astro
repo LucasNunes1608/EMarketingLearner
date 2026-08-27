@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+// Astro emits this as dist/404.html, which Cloudflare Pages serves with a real
+// 404 status. Without it, Pages falls back to serving index.html at 200 for every
+// unmatched URL — a soft 404, which tells search engines the home page exists at
+// infinitely many addresses and tells a learner nothing about what went wrong.
+---
+
+<BaseLayout title="Página não encontrada" description="Não encontramos a página que você procurou.">
+  <div class="mx-auto max-w-2xl px-4 py-16 text-center" data-pagefind-ignore>
+    <h1 class="text-3xl font-bold text-ink-900">Não encontramos esta página</h1>
+    <p class="mt-4 text-lg text-ink-700">
+      O endereço pode ter sido digitado errado, ou a aula pode ter mudado de lugar.
+    </p>
+    <p class="mt-3 text-ink-700">
+      Você pode voltar para o início e ver todos os cursos, ou procurar pelo assunto que queria
+      aprender.
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a
+        href="/"
+        class="inline-block rounded-lg bg-brand-700 px-6 py-3 font-semibold text-white no-underline hover:bg-brand-800"
+      >
+        Ver os cursos
+      </a>
+      <a
+        href="/buscar"
+        class="inline-block rounded-lg border border-brand-700 px-6 py-3 font-semibold text-brand-800 no-underline hover:bg-brand-50"
+      >
+        Buscar um assunto
+      </a>
+    </div>
+  </div>
+</BaseLayout>
