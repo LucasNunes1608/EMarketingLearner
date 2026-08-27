@@ -12,13 +12,44 @@
  *     when online, falling back to cache and then to the offline page.
  *   - Static assets are stale-while-revalidate: instant from cache, refreshed in
  *     the background.
+ *   - Every cache name carries the build version, so a deploy can never be answered
+ *     from the previous deploy's cache. This is the only layer that can serve stale
+ *     content at all: over HTTP, Cloudflare Pages answers HTML and every unversioned
+ *     asset with `max-age=0, must-revalidate`, and /_astro/ is fingerprinted.
  *
  * Caching is runtime-only: a lesson becomes available offline once it has been
  * visited. Precaching all six lessons up front would spend data the learner never
  * agreed to spend.
  */
 
-const CACHE = 'negocio-digital-v1';
+/**
+ * The build this worker was shipped with.
+ *
+ * `public/sw.js` is copied to `dist/` verbatim and is never processed by Vite, so a
+ * build-time constant cannot be imported here. The literal below is replaced in the
+ * built copy by the `buildVersion` integration in astro.config.ts; the placeholder is
+ * left in place when the file is served straight out of `public/` (`astro dev`), where
+ * nothing is deployed and cache rotation does not matter.
+ */
+const BUILD_VERSION = '__BUILD_VERSION__';
+
+/**
+ * Cache names carry the build version, and that is the whole cache-invalidation story.
+ *
+ * It used to be a constant with a hand-written suffix that nobody ever bumped. Two
+ * things followed. The obvious one is that a deploy inherited the previous deploy's
+ * entries and `activate` had nothing to purge. The less obvious one is that this file
+ * was then byte-identical between deploys,
+ * so the browser's update check never found a new worker at all: `install` ran once,
+ * ever, and the precached '/' and '/offline/' stayed frozen at whatever the learner's
+ * first visit happened to fetch.
+ *
+ * With the version in the name, every deploy ships a different `sw.js`, installs a new
+ * worker, precaches afresh and drops the previous build's cache below.
+ */
+const CACHE_PREFIX = 'negocio-digital-';
+const CACHE = `${CACHE_PREFIX}${BUILD_VERSION}`;
+
 // Trailing slash required. Cloudflare Pages 308-redirects '/offline' to '/offline/',
 // and `cache.add()` on a redirecting URL never settles, so `event.waitUntil` in the
 // install handler stayed pending forever and the worker never activated — silently
@@ -39,6 +70,25 @@ self.addEventListener('install', (event) => {
           cache.add(new Request(url, { cache: 'reload' })).catch(() => undefined)
         )
       );
+      // Take over immediately rather than waiting for every tab to close, and claim
+      // open clients on activation below.
+      //
+      // The usual objection is that a page loaded from the previous build can end up
+      // talking to the new worker and asking for assets the new cache no longer holds.
+      // That does not bite here. /_astro/ filenames are content-hashed, so a mismatch
+      // can only ever be a miss, never wrong bytes; the pages fetch essentially nothing
+      // after load (the video facade talks to YouTube, which this worker never
+      // intercepts); and navigations are network-first, so the very next page view in
+      // that tab is a clean, whole build.
+      //
+      // The alternative is worse for this audience. A learner who keeps one tab open
+      // would otherwise hold the old worker — and, before the cache name carried the
+      // build, its frozen cache — alive indefinitely.
+      //
+      // Deliberately no "a new version is available" prompt. It would need client
+      // JavaScript, a string to translate and a11y work, to tell a shop owner
+      // something they cannot act on more usefully than by carrying on: their next
+      // navigation is already the new build.
       await self.skipWaiting();
     })()
   );
@@ -47,8 +97,18 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
+      // Every cache this site has ever opened except the one for this build. Scoped to
+      // our own prefix so a cache belonging to something else on the origin is left
+      // alone; the cost is that renaming the prefix would strand the old ones.
       const keys = await caches.keys();
-      await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
+      await Promise.all(
+        keys
+          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE)
+          .map((key) => caches.delete(key))
+      );
+
+      // Claimed only after the purge, so a page taken over by this worker can never be
+      // answered from a cache that is about to be deleted.
       await self.clients.claim();
     })()
   );
