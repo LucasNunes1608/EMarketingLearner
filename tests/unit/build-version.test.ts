@@ -4,7 +4,7 @@ import {
   BUILD_VERSION_PLACEHOLDER,
   resolveBuildVersion,
   stampBuildVersion,
-} from '@/lib/build-version';
+} from '@/integrations/build-version';
 
 /**
  * The build version is the only thing that distinguishes one deploy from another
@@ -81,8 +81,8 @@ describe('resolveBuildVersion', () => {
 
     /**
      * Without this, an uncommitted local build reports the last commit's SHA — which
-     * is a lie — and, worse, produces the same version twice in a row, so the service
-     * worker's cache stops rotating exactly while you are iterating on it.
+     * is a lie. It does not make two dirty builds differ from each other — both yield the same
+     * '<sha>-dirty' — it only distinguishes a dirty tree from the clean commit it sits on.
      */
     it('marks an uncommitted working tree so the version cannot be mistaken for a commit', () => {
       const version = resolveBuildVersion({
