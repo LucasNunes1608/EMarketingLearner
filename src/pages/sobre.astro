@@ -52,7 +52,6 @@ const catalog = getPublishedCourses(courses).map((course) => {
  * detail on a public page is his decision to make, so LinkedIn is the contact route.
  */
 const LINKEDIN_URL = 'https://www.linkedin.com/in/lucasmnunesk/';
-const YOUTUBE_URL = 'https://www.youtube.com/@lucasmnunesk';
 
 const linkClass = 'text-brand-700 underline underline-offset-2';
 ---
@@ -196,23 +195,19 @@ const linkClass = 'text-brand-700 underline underline-offset-2';
           <a class={linkClass} href={LINKEDIN_URL} rel="noreferrer">LinkedIn</a> — para falar direto com
           ele.
         </li>
-        <li>
-          <a class={linkClass} href={YOUTUBE_URL} rel="noreferrer">YouTube</a> — o canal dele.
-        </li>
       </ul>
 
       {
         /*
-         * TODO(lucas): two things about the links above.
+         * TODO(lucas): the audience here is shop owners, and most of them are not on LinkedIn.
+         * If you want a route they would actually use — a WhatsApp business number, an Instagram
+         * profile — send it and it goes here alongside. Your email is known and deliberately not
+         * published: putting a personal address on a public page is your call to make.
          *
-         * 1. The audience here is shop owners, and most of them are not on LinkedIn. If you want
-         *    a route they would actually use — a WhatsApp business number, an Instagram profile,
-         *    comments on the channel — send it and it goes here instead. Your email is known and
-         *    deliberately not published: putting a personal address on a public page is your call.
-         * 2. The YouTube link is presented only as "o canal dele", because I was not told what is
-         *    on it. If that is where the course videos are published, say so and the wording can
-         *    be specific — and it should probably also fill SITE.links.youtube in
-         *    src/config/site.ts, which would put it in the footer of every page.
+         * The personal YouTube channel was removed deliberately: it is not where course videos
+         * live, and linking it from the page that asks a shop owner for their trust sends them
+         * somewhere that has nothing to do with the courses. SITE.links.youtube in
+         * src/config/site.ts stays empty until a channel for the courses exists.
          */
       }
     </section>
