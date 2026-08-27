@@ -1,0 +1,240 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { SITE } from '@/config/site';
+
+/**
+ * The licensing detail, moved off the footer.
+ *
+ * The footer used to carry the whole statement inline and cost 345px — 38% of a
+ * Pixel 7 viewport. Trimming words did not pay: the copy is dense because it was
+ * made legally accurate in review, and cutting every spare word saved ~11% of the
+ * characters, not even one line at 412px. So the detail lives here and the footer
+ * keeps one line.
+ *
+ * Wording is load-bearing and was corrected in review twice. Do not "tidy" it:
+ *
+ *  - CC BY-NC-SA has THREE conditions. An earlier draft named only BY and NC.
+ *    ShareAlike is the one a teacher adapting a worksheet actually needs.
+ *  - AGPL-3.0 section 13 obliges an offer of Corresponding Source to the users who
+ *    interact with THAT instance over a network, not publication to the world. A
+ *    modified fork run for a closed group owes those users the source and owes the
+ *    public nothing. "oferecer o código a quem usar" is correct where "deixar o
+ *    código público" would overstate it.
+ *
+ * tests/e2e/licence.spec.ts holds both as regressions.
+ *
+ * The two licence URLs are constants, not SITE values: a fork repoints
+ * SITE.repository, never these, which must keep pointing at the licence texts.
+ *
+ * rel="noreferrer" only. noopener is inert without target="_blank" and nothing
+ * here opens a new context; noreferrer is not redundant with the Referrer-Policy
+ * header, which still sends the origin cross-origin.
+ */
+const AGPL_URL = 'https://www.gnu.org/licenses/agpl-3.0.html';
+const CC_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.pt-BR';
+
+const linkClass = 'text-brand-700 underline underline-offset-2 hover:text-brand-900';
+
+/**
+ * Ready-made attribution. Built here rather than typed into the markup so the
+ * line breaks survive Prettier, and interpolated from SITE so a fork that
+ * repoints its own identity hands out a model that is true of the fork.
+ */
+const ATTRIBUTION_SHARE = `"${SITE.name}" — ${SITE.url}
+Licenciado sob CC BY-NC-SA 4.0.`;
+
+const ATTRIBUTION_ADAPT = `Adaptado de "${SITE.name}" — ${SITE.url}
+Original licenciado sob CC BY-NC-SA 4.0.
+Esta adaptação, feita por [seu nome], também está sob CC BY-NC-SA 4.0.`;
+
+const preClass =
+  'mt-2 overflow-x-auto rounded-card border border-ink-100 bg-surface-alt p-4 text-sm ' +
+  'whitespace-pre-wrap break-words text-ink-900';
+---
+
+<BaseLayout
+  title="Licença e reúso"
+  description="O que você pode fazer com as aulas, as fichas e o código deste site — e como dar crédito."
+>
+  <div class="mx-auto max-w-3xl px-4 py-12" data-pagefind-ignore>
+    <h1 class="text-3xl font-bold text-ink-900 sm:text-4xl">Licença e reúso</h1>
+
+    <p class="mt-5 text-lg text-ink-700">
+      Este site é livre. Você pode imprimir as fichas, compartilhar as aulas com quem quiser e usar
+      tudo isso no seu negócio, de graça, sem pedir permissão para ninguém.
+    </p>
+    <p class="mt-3 text-ink-700">
+      Se era só isso que você queria saber, pode parar por aqui. O resto da página é para quem quer
+      republicar, adaptar ou reaproveitar alguma coisa — uma professora, uma associação, alguém que
+      programa.
+    </p>
+
+    <h2 class="mt-12 text-2xl font-bold text-brand-800">Duas licenças, uma para cada parte</h2>
+    <p class="mt-3 text-ink-700">
+      Este projeto tem duas metades bem diferentes, e cada uma tem a sua licença.
+    </p>
+
+    <div class="mt-5 grid gap-4 sm:grid-cols-2">
+      <div class="rounded-card border border-ink-100 bg-surface-alt p-5">
+        <h3 class="text-lg font-bold text-ink-900">As aulas e as fichas</h3>
+        <p class="mt-2 text-sm text-ink-700">
+          Todo o material de ensino: o texto em português, os exercícios e a ordem das aulas.
+        </p>
+        <p class="mt-3 text-sm font-semibold text-ink-900">
+          <a class={linkClass} href={CC_URL} rel="noreferrer">CC BY-NC-SA 4.0</a>
+        </p>
+      </div>
+
+      <div class="rounded-card border border-ink-100 bg-surface-alt p-5">
+        <h3 class="text-lg font-bold text-ink-900">O código do site</h3>
+        <p class="mt-2 text-sm text-ink-700">
+          Tudo o que faz o site funcionar — ou seja, tudo o que está fora da pasta <code
+            class="rounded bg-surface px-1.5 py-0.5 text-[0.9em]">src/content/</code
+          >.
+        </p>
+        <p class="mt-3 text-sm font-semibold text-ink-900">
+          <a class={linkClass} href={AGPL_URL} rel="noreferrer">AGPL-3.0-only</a>
+        </p>
+      </div>
+    </div>
+
+    <p class="mt-5 text-ink-700">
+      A divisão tem um motivo. O código é um site estático comum, sem segredo nenhum: aprenda com
+      ele à vontade. O conteúdo é onde está o trabalho de verdade, e ele foi escrito para continuar
+      gratuito para as pessoas para quem foi feito.
+    </p>
+
+    <h2 class="mt-12 text-2xl font-bold text-brand-800">O que você pode e o que você não pode</h2>
+
+    <div class="mt-5 grid gap-6 sm:grid-cols-2">
+      <div>
+        <h3 class="text-lg font-bold text-brand-800">Pode</h3>
+        <ul class="mt-3 list-disc space-y-2 pl-5 text-ink-700" data-may>
+          <li>Imprimir as fichas e distribuir para os seus alunos, colegas ou clientes.</li>
+          <li>Compartilhar as aulas, do jeito que estão, com quem você quiser.</li>
+          <li>Adaptar o material: mudar uma ficha, reescrever uma aula, traduzir.</li>
+          <li>Ler, rodar, copiar e modificar o código do site.</li>
+          <li>Usar tudo isso dentro do seu próprio negócio, sem pedir nada a ninguém.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-lg font-bold text-accent-700">Não pode</h3>
+        <ul class="mt-3 list-disc space-y-2 pl-5 text-ink-700" data-may-not>
+          <li>Vender o material ou cobrar por ele.</li>
+          <li>Colocar as aulas atrás de um paywall ou de um cadastro obrigatório.</li>
+          <li>Usar o conteúdo em treinamento pago.</li>
+          <li>
+            Colocar no ar uma versão modificada deste site sem oferecer o código dela a quem usar.
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 class="mt-12 text-2xl font-bold text-brand-800">As três condições do conteúdo</h2>
+    <p class="mt-3 text-ink-700">
+      A licença das aulas e das fichas tem três condições, e as três valem ao mesmo tempo.
+    </p>
+
+    <ul class="mt-5 space-y-4" data-cc-conditions>
+      <li class="rounded-card border-l-4 border-brand-300 bg-surface-alt py-3 pr-4 pl-4">
+        <p class="font-semibold text-ink-900">Dê crédito <span class="text-ink-500">(BY)</span></p>
+        <p class="mt-1 text-ink-700">
+          Diga que o material veio do {SITE.name} e coloque um link de volta. Tem um modelo pronto para
+          copiar logo abaixo.
+        </p>
+      </li>
+      <li class="rounded-card border-l-4 border-brand-300 bg-surface-alt py-3 pr-4 pl-4">
+        <p class="font-semibold text-ink-900">
+          Não use para fins comerciais <span class="text-ink-500">(NC)</span>
+        </p>
+        <p class="mt-1 text-ink-700">
+          Não venda o material, não coloque atrás de paywall e não use em treinamento pago. Se é
+          exatamente isso que você quer fazer, veja mais abaixo — dá para conversar.
+        </p>
+      </li>
+      <li class="rounded-card border-l-4 border-brand-300 bg-surface-alt py-3 pr-4 pl-4">
+        <p class="font-semibold text-ink-900">
+          Mantenha a mesma licença <span class="text-ink-500">(SA)</span>
+        </p>
+        <p class="mt-1 text-ink-700">
+          Se você adaptar alguma coisa — mudar uma ficha, reescrever uma aula, traduzir — a sua
+          versão precisa sair sob a mesma licença, a CC BY-NC-SA 4.0. Adaptar e fechar não vale.
+        </p>
+      </li>
+    </ul>
+
+    <h2 class="mt-12 text-2xl font-bold text-brand-800">Como dar crédito</h2>
+    <p class="mt-3 text-ink-700">
+      Copie um dos blocos abaixo e ajuste. Serve no rodapé de uma ficha impressa, num slide ou no pé
+      de uma página.
+    </p>
+
+    <div class="mt-5 space-y-6" data-attribution-model>
+      <div>
+        <p class="font-semibold text-ink-900">Se você está compartilhando sem mudar nada</p>
+        <pre class={preClass}>{ATTRIBUTION_SHARE}</pre>
+      </div>
+
+      <div>
+        <p class="font-semibold text-ink-900">Se você adaptou alguma coisa</p>
+        <pre class={preClass}>{ATTRIBUTION_ADAPT}</pre>
+      </div>
+    </div>
+
+    <h2 class="mt-12 text-2xl font-bold text-brand-800">A regra do código</h2>
+    <p class="mt-3 text-ink-700">
+      O código está sob a AGPL-3.0. Você pode ler, rodar, copiar, modificar e publicar a sua própria
+      versão do site. A licença pede uma coisa em troca, e só uma.
+    </p>
+
+    <div
+      class="rounded-card mt-5 border-l-4 border-brand-300 bg-surface-alt p-5"
+      data-agpl-network-clause
+    >
+      <p class="text-ink-700">
+        Se você modificar o código e colocar a sua versão no ar, precisa <strong
+          class="font-semibold text-ink-900">oferecer o código da sua versão a quem usar</strong
+        > esse site.
+      </p>
+      <p class="mt-3 text-ink-700">
+        A obrigação é com as pessoas que acessam a sua versão, e não com o mundo inteiro. Se o seu
+        site roda só para um grupo fechado — os alunos de uma escola, a equipe de uma associação — é
+        a esse grupo que você deve o código. Você não precisa abrir um repositório para todo mundo.
+      </p>
+    </div>
+
+    <p class="mt-5 text-ink-700">
+      Na prática, o jeito mais simples de cumprir isso é o que fazemos aqui: um link para o
+      repositório no rodapé de todas as páginas. Se você usar este projeto como base, troque esse
+      link pelo endereço do <em>seu</em> repositório — deixar apontando para o nosso não cumpre a sua
+      parte.
+    </p>
+
+    <h2 class="mt-12 text-2xl font-bold text-brand-800">
+      Quer usar para alguma coisa comercial? Pergunte
+    </h2>
+
+    <div
+      class="rounded-card mt-4 border border-brand-200 bg-brand-50 p-5"
+      data-commercial-permission
+    >
+      <p class="text-ink-700">
+        O <strong class="font-semibold text-ink-900"
+          >“não comercial” é um padrão, não uma recusa</strong
+        >. Ele existe para impedir que o material vire produto pago de outra pessoa, e não para
+        atrapalhar quem quer levar o conteúdo mais longe.
+      </p>
+      <p class="mt-3 text-ink-700">
+        Uma associação comercial, um SEBRAE ou uma escola que queira usar as fichas num curso pago
+        pode pedir autorização — e ela pode ser dada por escrito, à parte da licença. Isso é bom
+        para os alunos e não tira nada de ninguém.
+      </p>
+      <p class="mt-3 text-ink-700">
+        Então pergunte: abra uma <em>issue</em> no
+        <a class={linkClass} href={SITE.repository} rel="noreferrer">repositório do projeto</a> contando
+        o que você pretende fazer.
+      </p>
+    </div>
+  </div>
+</BaseLayout>
