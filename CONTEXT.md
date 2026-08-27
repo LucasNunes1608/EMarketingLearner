@@ -40,6 +40,11 @@ _Avoid_: video, episode, module, unit
 A printable one-page exercise belonging to one lesson, designed to be filled in by hand.
 _Avoid_: handout, exercise, PDF, activity
 
+**Slug**:
+The lowercase, hyphenated identifier of a course or lesson, taken from its file name and
+used in its URL. It is permanent once published, because progress is keyed on it.
+_Avoid_: id, permalink, path, file name
+
 **Progress**:
 The set of lessons a learner has marked complete. It exists on one device only and is
 never associated with a person.
