@@ -7,14 +7,18 @@ import { execFileSync } from 'node:child_process';
  * identical from the outside, which is why a learner reading a cached page and the
  * author reading their bug report have no way to agree on what they are looking at.
  * This module produces one short string that answers "which build is this?", and it
- * is the single definition of that string for both of its consumers:
+ * is the single definition of that string for all three of its consumers:
  *
  *   1. `<meta name="build-version">` in BaseLayout — every page states its build.
- *   2. `dist/version.json` — `curl <site>/version.json` says what is actually live,
+ *   2. `dist/sw.js` — the service worker's cache name, so a deploy cannot reuse the
+ *      previous deploy's cache. See `stampBuildVersion` for how it gets there.
+ *   3. `dist/version.json` — `curl <site>/version.json` says what is actually live,
  *      without parsing HTML.
  *
  * It is deliberately deterministic: the same commit builds to the same version, so
- * the version in a bug report can be fed straight to `git show`.
+ * the version in a bug report can be fed straight to `git show`. That also means a
+ * rebuild of an unchanged commit reuses the same cache, which is correct — the bytes
+ * are the same.
  *
  * This module runs at build time only. It is imported by `astro.config.ts` and by
  * component frontmatter, both of which execute in Node; nothing here is ever bundled
@@ -29,6 +33,12 @@ import { execFileSync } from 'node:child_process';
  * on some build images — have no git binary at all.
  */
 const COMMIT_SHA_VARIABLES = ['CF_PAGES_COMMIT_SHA', 'GITHUB_SHA'] as const;
+
+/** Characters allowed in a version. Safe unescaped in a cache key, a JS string and an HTML attribute. */
+const SAFE_VERSION = /^[a-z0-9-]+$/;
+
+/** The literal that `stampBuildVersion` replaces in `public/sw.js`. */
+export const BUILD_VERSION_PLACEHOLDER = '__BUILD_VERSION__';
 
 /** How much of a commit SHA is kept. Eight hex digits stay unambiguous well past this project's size. */
 const SHORT_SHA_LENGTH = 8;
@@ -108,4 +118,35 @@ let memoised: string | undefined;
 export function getBuildVersion(): string {
   memoised ??= resolveBuildVersion();
   return memoised;
+}
+
+/**
+ * Write the version into a copy of the service worker source.
+ *
+ * `public/sw.js` is copied to `dist/` verbatim and is never processed by Vite, so a
+ * build-time constant cannot be imported into it. Text substitution on the built copy
+ * is the whole mechanism: `public/sw.js` keeps the placeholder and stays a valid,
+ * working service worker on its own, and only `dist/sw.js` carries the real version.
+ *
+ * Both guards below turn silent breakage into a failed build. Losing the placeholder
+ * would ship a worker whose cache name never changes again — the exact bug this
+ * replaced — and a version containing a quote would close the string literal it is
+ * written into.
+ */
+export function stampBuildVersion(source: string, version: string): string {
+  if (!SAFE_VERSION.test(version)) {
+    throw new Error(
+      `Refusing to stamp an unsafe build version: ${JSON.stringify(version)}. ` +
+        'A version must match /^[a-z0-9-]+$/.'
+    );
+  }
+
+  if (!source.includes(BUILD_VERSION_PLACEHOLDER)) {
+    throw new Error(
+      `The service worker source contains no ${BUILD_VERSION_PLACEHOLDER} placeholder, ` +
+        'so its cache name would never change between deploys.'
+    );
+  }
+
+  return source.split(BUILD_VERSION_PLACEHOLDER).join(version);
 }

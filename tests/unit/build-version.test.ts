@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveBuildVersion } from '@/lib/build-version';
+import {
+  BUILD_VERSION_PLACEHOLDER,
+  resolveBuildVersion,
+  stampBuildVersion,
+} from '@/lib/build-version';
 
 /**
  * The build version is the only thing that distinguishes one deploy from another
- * once the files are on the CDN, so it has to be produced correctly on a developer's
- * machine, on Cloudflare Pages, and on a builder with no git at all.
+ * once the files are on the CDN. It names the service worker's cache, so getting
+ * it wrong does not produce a cosmetic bug — it produces a cache that never
+ * rotates, which is the failure this module exists to prevent.
  *
  * Every probe is injected so these tests never shell out to git and never depend
  * on the state of the checkout they happen to run in.
@@ -130,9 +135,9 @@ describe('resolveBuildVersion', () => {
   });
 
   /**
-   * The version is printed into an HTML attribute and written into a JSON file, and
-   * more consumers will want it. Restricting it to lowercase alphanumerics and hyphens
-   * keeps it safe in all of them without any escaping.
+   * The version is interpolated into a JavaScript string literal in sw.js, used as a
+   * Cache Storage key and printed into an HTML attribute. Restricting it to lowercase
+   * alphanumerics and hyphens keeps all three safe without any escaping.
    */
   describe('the shape every consumer relies on', () => {
     const cases = [
@@ -142,11 +147,43 @@ describe('resolveBuildVersion', () => {
     ];
 
     for (const version of cases) {
-      it(`"${version}" is safe to use unescaped`, () => {
+      it(`"${version}" is safe in a cache name, a JS string literal and an HTML attribute`, () => {
         expect(version).toMatch(/^[a-z0-9-]+$/);
         expect(version.length).toBeGreaterThan(0);
         expect(version.length).toBeLessThanOrEqual(32);
       });
     }
+  });
+});
+
+describe('stampBuildVersion', () => {
+  it('replaces the placeholder in a copy of the service worker', () => {
+    const source = `const BUILD_VERSION = '${BUILD_VERSION_PLACEHOLDER}';`;
+
+    expect(stampBuildVersion(source, 'a1b2c3d4')).toBe("const BUILD_VERSION = 'a1b2c3d4';");
+  });
+
+  it('replaces every occurrence, not just the first', () => {
+    const source = `${BUILD_VERSION_PLACEHOLDER}|${BUILD_VERSION_PLACEHOLDER}`;
+
+    expect(stampBuildVersion(source, 'a1b2c3d4')).toBe('a1b2c3d4|a1b2c3d4');
+  });
+
+  /**
+   * The failure this guards against is silent: rename the placeholder in sw.js and the
+   * build would happily ship a worker whose cache name never changes again — exactly
+   * the bug this whole change removes. Fail the build loudly instead.
+   */
+  it('refuses to stamp a file that has no placeholder', () => {
+    expect(() => stampBuildVersion('const CACHE = "negocio-digital-v1";', 'a1b2c3d4')).toThrow(
+      /placeholder/i
+    );
+  });
+
+  /** The version lands inside a single-quoted JS string, so it must not be able to escape one. */
+  it('refuses a version that could break out of the string literal it is written into', () => {
+    const source = `const BUILD_VERSION = '${BUILD_VERSION_PLACEHOLDER}';`;
+
+    expect(() => stampBuildVersion(source, "x'; fetch('//evil.example'); //")).toThrow(/version/i);
   });
 });

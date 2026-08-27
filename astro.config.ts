@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
@@ -7,21 +7,25 @@ import type { AstroIntegration } from 'astro';
 import { defineConfig } from 'astro/config';
 
 import { SITE } from './src/config/site';
-import { getBuildVersion } from './src/lib/build-version';
+import { getBuildVersion, stampBuildVersion } from './src/lib/build-version';
 import { rehypeWorksheetCheckboxes } from './src/lib/rehype-worksheet-checkboxes';
 
 /**
- * Write the build version into the output as a file of its own.
+ * Stamp the build version onto the two outputs that cannot be given it any other way.
  *
- * `src/lib/build-version.ts` explains what the version is and why. `dist/version.json`
- * exists so that what is live can be read with one request instead of by scraping a
- * page — `curl <site>/version.json` after a deploy answers "has it propagated yet?".
+ * `src/lib/build-version.ts` explains what the version is and why. This integration is
+ * only the delivery mechanism for the two consumers outside the Vite module graph:
  *
- * The other consumer, `<meta name="build-version">`, needs none of this: BaseLayout's
+ *   - `dist/sw.js`, because `public/` is copied verbatim and never processed by Vite,
+ *     so the worker's cache name has to be substituted into the built copy;
+ *   - `dist/version.json`, so that what is live can be read with one request instead of
+ *     by scraping a page.
+ *
+ * The third consumer, `<meta name="build-version">`, needs none of this: BaseLayout's
  * frontmatter runs in Node at build time and simply imports the value.
  *
  * It runs as an integration rather than a step in the `build` npm script so that a bare
- * `astro build` produces it too.
+ * `astro build` cannot produce an unstamped, permanently-cached worker.
  */
 function buildVersion(): AstroIntegration {
   return {
@@ -30,9 +34,13 @@ function buildVersion(): AstroIntegration {
       'astro:build:done': async ({ dir, logger }) => {
         const version = getBuildVersion();
 
+        const serviceWorker = new URL('sw.js', dir);
+        const source = await readFile(serviceWorker, 'utf8');
+        await writeFile(serviceWorker, stampBuildVersion(source, version), 'utf8');
+
         await writeFile(new URL('version.json', dir), `${JSON.stringify({ version })}\n`, 'utf8');
 
-        logger.info(`wrote version.json for build ${version}`);
+        logger.info(`stamped build ${version} onto sw.js and version.json`);
       },
     },
   };
