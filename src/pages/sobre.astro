@@ -1,0 +1,229 @@
+---
+import { SITE } from '@/config/site';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import {
+  coursePath,
+  formatDuration,
+  getCourseDurationSeconds,
+  getLessonsForCourse,
+  getPublishedCourses,
+} from '@/lib/content';
+import { loadContent } from '@/lib/content-loader';
+
+/**
+ * The trust page.
+ *
+ * The audience meets a lot of paid "digital marketing" pitches, so this page exists to
+ * answer "who is this and what is the catch?" before a learner spends time here. Two rules
+ * govern the copy:
+ *
+ * 1. Every claim is sourced from something checkable in this repository — the running cost
+ *    in README.md, the privacy posture in docs/adr/0004, 0005, 0007 and 0009. If a sentence
+ *    would need a fact that is not written down somewhere, it does not get written.
+ * 2. Nothing is said about the author beyond his name, his trade and the fact that he built
+ *    this. An invented biography would defeat the one thing the page is for.
+ *
+ * The list of what a learner will be able to do is generated from the published courses
+ * rather than described by hand, so the promise cannot drift away from the curriculum.
+ *
+ * External links carry rel="noreferrer" only, matching SiteFooter.astro: noopener is inert
+ * without target="_blank" and nothing here opens a new context.
+ */
+const { courses, lessons } = await loadContent();
+
+const catalog = getPublishedCourses(courses).map((course) => {
+  const courseLessons = getLessonsForCourse(lessons, course.id);
+  return {
+    id: course.id,
+    title: course.data.title,
+    description: course.data.description,
+    href: coursePath(course.id),
+    lessonCount: courseLessons.length,
+    duration: formatDuration(getCourseDurationSeconds(courseLessons)),
+  };
+});
+
+/**
+ * The author's own links. They live here rather than in SITE.links, which describes the
+ * site's brand accounts and is what SiteFooter renders on every page — these are personal
+ * and belong to this page only.
+ *
+ * His email address is known and deliberately not published: putting a personal contact
+ * detail on a public page is his decision to make, so LinkedIn is the contact route.
+ */
+const LINKEDIN_URL = 'https://www.linkedin.com/in/lucasmnunesk/';
+const YOUTUBE_URL = 'https://www.youtube.com/@lucasmnunesk';
+
+const linkClass = 'text-brand-700 underline underline-offset-2';
+---
+
+<BaseLayout
+  title="Sobre"
+  description="Quem fez este site, por que ele é gratuito de verdade e como falar com o autor."
+>
+  {
+    /*
+     * data-pagefind-ignore is belt-and-braces, the same as on /404 and /offline: indexing is
+     * already scoped to the pages carrying data-pagefind-body (courses and lessons), so this
+     * page is excluded either way. A learner searches for "Pix" or "catálogo" expecting an
+     * aula; this page answering that query would be a worse result than none.
+     *
+     * Comments in this file are the {/* *\/} form, not HTML comments: an HTML comment is
+     * emitted into the served page, and internal notes have no business shipping to a
+     * learner — least of all on the page whose whole job is to look trustworthy.
+     */
+  }
+  <div class="mx-auto max-w-3xl px-4 py-8" data-pagefind-ignore>
+    <h1 class="text-3xl font-bold text-ink-900">Sobre o Negócio Digital</h1>
+
+    <p class="mt-4 text-lg text-ink-700">
+      Este site ensina de graça o que um negócio pequeno precisa para funcionar na internet:
+      aparecer no Google, vender pelo WhatsApp, receber no Pix, tirar foto boa com o celular. Você
+      não precisa entender nada de tecnologia para acompanhar.
+    </p>
+
+    <h2 class="mt-10 text-2xl font-bold text-ink-900">Para quem é</h2>
+    <p class="mt-3 text-ink-700">
+      Para quem toca o próprio negócio: o MEI, a loja de bairro, o salão, a padaria, a costureira, o
+      eletricista, quem vende pelo WhatsApp de casa.
+    </p>
+    <p class="mt-3 text-ink-700">
+      Você precisa do celular que já usa todo dia e de uns 15 minutos por aula. Cada aula tem o
+      passo a passo, os erros mais comuns e uma tarefa curta para você fazer no seu negócio no mesmo
+      dia.
+    </p>
+
+    <h2 class="mt-10 text-2xl font-bold text-ink-900">O que você vai conseguir fazer</h2>
+    <ul class="mt-4 space-y-4" data-about-courses>
+      {
+        catalog.map((course) => (
+          <li class="rounded-xl border border-ink-100 bg-surface p-4">
+            <h3 class="text-lg font-bold">
+              <a class="text-ink-900 no-underline hover:text-brand-800" href={course.href}>
+                {course.title}
+              </a>
+            </h3>
+            <p class="mt-1 text-sm text-ink-500">
+              {course.lessonCount} {course.lessonCount === 1 ? 'aula' : 'aulas'} · {course.duration}
+            </p>
+            <p class="mt-2 text-ink-700">{course.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="mt-4 text-ink-700">
+      Terminou um curso inteiro? Você pode emitir um certificado e imprimir. Ele serve para mostrar
+      o que você fez, não vale como diploma de escola nem de faculdade.
+    </p>
+
+    <h2 class="mt-10 text-2xl font-bold text-ink-900">Por que é de graça</h2>
+    <p class="mt-3 text-ink-700">
+      Sem mensalidade, sem cadastro, sem período de teste que depois vira cobrança e sem pacote caro
+      no fim. Não pedimos seu e-mail nem seu cartão em momento nenhum.
+    </p>
+    <p class="mt-3 text-ink-700" data-running-cost>
+      Dá para prometer isso porque o site quase não custa nada para funcionar. Ele é um site
+      simples, sem sistema por trás, hospedado sem custo, e os vídeos ficam no YouTube, que também
+      não cobra. A única conta que chega é a do endereço na internet: cerca de R$40 por ano, do
+      bolso de quem fez o site.
+    </p>
+    <p class="mt-3 text-ink-700">
+      Atender uma pessoa ou cinquenta mil pessoas custa a mesma coisa aqui. É por isso que ninguém
+      precisa te vender nada para o site continuar no ar — e por isso a gente pode dizer que é
+      gratuito sem letra miúda.
+    </p>
+    <p class="mt-3 text-ink-700">
+      Não precisa acreditar na nossa palavra: o código deste site é público no <a
+        class={linkClass}
+        href={SITE.repository}
+        rel="noreferrer">GitHub</a
+      >, e qualquer pessoa que entenda do assunto pode conferir tudo o que está escrito aqui.
+    </p>
+
+    <h2 class="mt-10 text-2xl font-bold text-ink-900">O que guardamos sobre você: nada</h2>
+    <p class="mt-3 text-ink-700">
+      Não existe cadastro, senha nem login. Você não precisa dizer quem é para assistir a qualquer
+      aula.
+    </p>
+    <p class="mt-3 text-ink-700">
+      As aulas que você marca como concluídas ficam salvas só no aparelho que você está usando. Não
+      vão para servidor nenhum. Se você limpar os dados do navegador ou trocar de celular, o
+      progresso começa do zero — é o preço de não guardar nada sobre você, e a gente prefere assim.
+    </p>
+    <p class="mt-3 text-ink-700">
+      O vídeo só carrega quando você aperta o play. Antes disso o YouTube nem é acionado, o que
+      economiza a sua internet e evita o rastreamento que vem junto.
+    </p>
+    <p class="mt-3 text-ink-700">
+      Para ser exato: o serviço que hospeda o site conta quantos acessos cada página recebe, como
+      acontece em qualquer site da internet. Essa contagem não diz quem você é nem o que você
+      concluiu.
+    </p>
+
+    <section class="mt-10" data-author aria-labelledby="quem-fez">
+      <h2 id="quem-fez" class="text-2xl font-bold text-ink-900">Quem fez</h2>
+      <p class="mt-3 text-ink-700">
+        Este site foi feito por <strong>Lucas Nunes</strong>, engenheiro de software. Ele montou a
+        plataforma sozinho: as páginas, a busca, o controle do que você já assistiu e o certificado.
+      </p>
+      <p class="mt-3 text-ink-700">
+        É um projeto pessoal e não é monetizado. Não vende curso, não tem anúncio, não tem
+        patrocinador, e a conta do endereço na internet sai do bolso dele.
+      </p>
+      <p class="mt-3 text-ink-700">
+        O objetivo é simples: que você consiga fazer sozinho, com o celular que já tem, o que
+        precisa ser feito para o seu negócio aparecer e vender na internet — sem contratar ninguém e
+        sem pagar por isso.
+      </p>
+
+      {
+        /*
+         * TODO(lucas): one or two sentences, in your own words, about why you started this —
+         * what you saw that made it worth building. The paragraph above states the project's
+         * goal, which is documented, but the personal reason is the part a stranger actually
+         * weighs, and it is not written down anywhere in the repository for me to source.
+         * Anything not given to me is left unwritten on purpose.
+         */
+      }
+
+      <h3 class="mt-8 text-xl font-bold text-ink-900">Como falar com ele</h3>
+      <p class="mt-3 text-ink-700">
+        Achou um erro numa aula, travou em algum passo ou sentiu falta de um assunto? Mande uma
+        mensagem.
+      </p>
+      <ul class="mt-3 space-y-2 text-ink-700">
+        <li>
+          <a class={linkClass} href={LINKEDIN_URL} rel="noreferrer">LinkedIn</a> — para falar direto com
+          ele.
+        </li>
+        <li>
+          <a class={linkClass} href={YOUTUBE_URL} rel="noreferrer">YouTube</a> — o canal dele.
+        </li>
+      </ul>
+
+      {
+        /*
+         * TODO(lucas): two things about the links above.
+         *
+         * 1. The audience here is shop owners, and most of them are not on LinkedIn. If you want
+         *    a route they would actually use — a WhatsApp business number, an Instagram profile,
+         *    comments on the channel — send it and it goes here instead. Your email is known and
+         *    deliberately not published: putting a personal address on a public page is your call.
+         * 2. The YouTube link is presented only as "o canal dele", because I was not told what is
+         *    on it. If that is where the course videos are published, say so and the wording can
+         *    be specific — and it should probably also fill SITE.links.youtube in
+         *    src/config/site.ts, which would put it in the footer of every page.
+         */
+      }
+    </section>
+
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a
+        href="/"
+        class="inline-block rounded-lg bg-brand-700 px-6 py-3 font-semibold text-white no-underline hover:bg-brand-800"
+      >
+        Ver os cursos
+      </a>
+    </div>
+  </div>
+</BaseLayout>

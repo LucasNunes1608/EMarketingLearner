@@ -22,6 +22,7 @@ const PAGES: Array<{ name: string; path: string }> = [
   { name: 'lesson', path: `${COURSE}/01-google-meu-negocio` },
   { name: 'worksheet', path: '/ficha/01-google-meu-negocio' },
   { name: 'search', path: '/buscar' },
+  { name: 'about', path: '/sobre' },
   { name: 'certificate (locked)', path: '/certificado/colocando-seu-negocio-no-digital' },
   { name: 'offline fallback', path: '/offline' },
 ];

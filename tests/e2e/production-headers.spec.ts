@@ -136,6 +136,7 @@ test.describe('internal links', () => {
    */
   for (const from of [
     '/',
+    '/sobre/',
     '/curso/colocando-seu-negocio-no-digital/',
     '/curso/colocando-seu-negocio-no-digital/01-google-meu-negocio/',
   ]) {
