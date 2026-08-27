@@ -107,8 +107,10 @@ self.addEventListener('activate', (event) => {
           .map((key) => caches.delete(key))
       );
 
-      // Claimed only after the purge, so a page taken over by this worker can never be
-      // answered from a cache that is about to be deleted.
+      // Claimed after the purge, but not for the reason it looks like: this worker only ever
+      // opens CACHE, which is never in the delete set, so a page claimed earlier could not have
+      // reached a doomed cache either. The real reason is the Promise.all above — if one
+      // caches.delete rejects, claim() is skipped and this worker never controls the page.
       await self.clients.claim();
     })()
   );
