@@ -383,6 +383,21 @@ test.describe('about page', () => {
   });
 
   /**
+   * Regression guard. The first draft claimed 'o YouTube nem é acionado' before play, which is
+   * false: VideoPlayer paints the poster from i.ytimg.com as a CSS background on page load, so
+   * YouTube receives the learner's IP before any click. Verified against production. On the page
+   * whose whole job is earning trust, an overstated privacy claim is the worst kind to get wrong,
+   * so the copy must keep naming the cover image rather than promising zero contact.
+   */
+  test('the privacy section does not overstate the video facade', async ({ page }) => {
+    await page.goto('/sobre/');
+    const body = page.locator('body');
+
+    await expect(body).toContainText('imagem de capa');
+    await expect(body).not.toContainText(/YouTube nem é acionado/i);
+  });
+
+  /**
    * Same convention as the footer: rel="noreferrer" and nothing else. noopener is inert
    * without target="_blank", and no link on this site opens a new context.
    */
