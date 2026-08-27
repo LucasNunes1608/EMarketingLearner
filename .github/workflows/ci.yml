@@ -71,8 +71,10 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      # playwright.config.ts builds and previews the site itself, so the suite
-      # always runs against the real static output rather than the dev server.
+      # playwright.config.ts builds the site and serves it with `wrangler pages
+      # dev`, so the suite runs against the real static output *and* against
+      # Cloudflare's own handling of public/_headers and the 404 fallback —
+      # neither of which `astro preview` applies.
       - name: Run Playwright tests
         run: npm run test:e2e
 

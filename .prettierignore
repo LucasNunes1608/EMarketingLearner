@@ -4,6 +4,7 @@ node_modules
 coverage
 playwright-report
 test-results
+.wrangler
 public/pagefind
 package-lock.json
 
