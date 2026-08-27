@@ -2,7 +2,7 @@
 import SiteFooter from '@/components/SiteFooter.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
 import { SITE } from '@/config/site';
-import { getBuildVersion } from '@/lib/build-version';
+import { getBuildVersion } from '@/integrations/build-version';
 import '@/styles/global.css';
 
 interface Props {
@@ -19,7 +19,7 @@ const { title, description = SITE.description, bareTitle = false, chrome = true 
 const pageTitle = bareTitle ? title : `${title} — ${SITE.name}`;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
 
-// Resolved once for the whole build; see src/lib/build-version.ts.
+// Resolved once for the whole build; see src/integrations/build-version.ts.
 const buildVersion = getBuildVersion();
 ---
 
@@ -34,7 +34,7 @@ const buildVersion = getBuildVersion();
       to nobody's benefit. In `view-source` it is the second line of the head, and
       `document.querySelector('meta[name="build-version"]').content` reads it from a
       console, which covers debugging a report. Living in BaseLayout puts it on every
-      route without anyone having to remember it. See src/lib/build-version.ts.
+      route without anyone having to remember it. See src/integrations/build-version.ts.
     -->
     <meta name="build-version" content={buildVersion} />
     <title>{pageTitle}</title>

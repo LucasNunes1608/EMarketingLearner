@@ -222,8 +222,8 @@ guarantee.
 ## Testing
 
 ```bash
-npm test           # 128 unit tests
-npm run test:e2e   # 60 E2E tests across desktop + mobile viewports
+npm test           # unit tests (Vitest)
+npm run test:e2e   # E2E + a11y across desktop and mobile viewports
 ```
 
 **Unit** (Vitest) covers the pure logic: content schemas and validation, ordering and

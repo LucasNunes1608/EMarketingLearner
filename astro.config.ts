@@ -7,13 +7,13 @@ import type { AstroIntegration } from 'astro';
 import { defineConfig } from 'astro/config';
 
 import { SITE } from './src/config/site';
-import { getBuildVersion, stampBuildVersion } from './src/lib/build-version';
+import { getBuildVersion, stampBuildVersion } from './src/integrations/build-version';
 import { rehypeWorksheetCheckboxes } from './src/lib/rehype-worksheet-checkboxes';
 
 /**
  * Stamp the build version onto the two outputs that cannot be given it any other way.
  *
- * `src/lib/build-version.ts` explains what the version is and why. This integration is
+ * `src/integrations/build-version.ts` explains what the version is and why. This integration is
  * only the delivery mechanism for the two consumers outside the Vite module graph:
  *
  *   - `dist/sw.js`, because `public/` is copied verbatim and never processed by Vite,
