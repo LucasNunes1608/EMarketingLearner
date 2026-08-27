@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4321;
-const BASE_URL = `http://localhost:${PORT}`;
+// 127.0.0.1 rather than localhost: on Windows and on some Node versions
+// `localhost` resolves to ::1 first, and Wrangler listens on IPv4 only.
+const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -31,10 +33,25 @@ export default defineConfig({
     },
   ],
 
-  // Tests run against the real static build, not the dev server, so what CI verifies
-  // is byte-for-byte what Cloudflare Pages will serve.
+  // Tests run against the real static build served by Cloudflare's own local
+  // emulator, so what CI verifies is what Cloudflare Pages will actually serve.
+  //
+  // `astro preview` was used here before and could not catch two production bugs,
+  // because it ignores `public/_headers` and has no 404 fallback:
+  //   - the CSP was missing 'wasm-unsafe-eval', so Pagefind's WASM index refused
+  //     to instantiate and search returned nothing in production;
+  //   - a missing URL was answered with the home page at HTTP 200.
+  // `wrangler pages dev` applies `_headers` and the 404 fallback with Cloudflare's
+  // own implementation, so the suite tests their behaviour rather than our reading
+  // of the spec.
   webServer: {
-    command: 'npm run build && npm run preview',
+    command: [
+      'npm run build',
+      // Pinned compatibility date: keeps the emulator deterministic across runs
+      // and silences Wrangler's "no compatibility_date" warning.
+      `npx wrangler pages dev dist --ip 127.0.0.1 --port ${PORT}` +
+        ' --compatibility-date=2026-08-26 --show-interactive-dev-session=false',
+    ].join(' && '),
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,

@@ -12,6 +12,8 @@ public/pagefind/
 playwright-report/
 test-results/
 coverage/
+# wrangler's local emulator state, created by `wrangler pages dev` in the E2E run
+.wrangler/
 
 # environment
 .env
