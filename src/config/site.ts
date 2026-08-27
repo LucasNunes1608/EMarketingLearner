@@ -15,7 +15,7 @@ export const SITE = {
    * Canonical origin. MUST be updated before the first production deploy —
    * it drives the sitemap, canonical URLs and Open Graph tags.
    */
-  url: 'https://negociodigital.example.com',
+  url: 'https://negociodigital.pages.dev',
   locale: 'pt-BR',
   /** Used as the <html lang> attribute. */
   lang: 'pt-BR',
