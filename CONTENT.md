@@ -20,6 +20,25 @@ src/content/
 Slugs are lowercase, hyphen-separated, no accents: `pix-e-pagamentos`, not
 `Pix_e_Pagamentos` or `pix-e-pagamentós`. The slug becomes the URL.
 
+### Slugs are permanent
+
+**Once a course or lesson is published, its file name never changes again.**
+
+Learners' progress is saved in their own browser and keyed by these exact strings.
+There is no account and no copy on any server, so if you rename a published file,
+everyone who had ticked that lesson loses it — instantly, with no warning and no way
+to get it back. Rename a course directory and the whole course goes at once.
+
+Choose the slug carefully before the first publish, because that is the only free
+moment to change it. Afterwards, reword the `title` as much as you like — the title
+is what people read, and it is not an identifier. Leave the file name alone.
+
+`tests/unit/published-slugs.test.ts` pins every published slug and fails if one goes
+missing. Adding new courses and lessons never touches it. If a rename really is
+unavoidable, that test explains the one safe way to do it: ship a progress migration
+in the same change. Full reasoning in
+[ADR-0011](docs/adr/0011-published-slugs-are-permanent-identifiers.md).
+
 ---
 
 ## Adding a course
@@ -154,6 +173,7 @@ which screen readers flag as an unlabelled form field).
 ## Publishing checklist
 
 ```bash
+npm run test       # among other things, checks no published slug was renamed
 npm run build      # schema + integrity validation runs here
 npm run preview    # check it on a narrow window — most learners are on a phone
 ```
