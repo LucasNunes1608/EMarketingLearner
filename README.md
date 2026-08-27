@@ -195,6 +195,34 @@ Storage access is wrapped in `try/catch` at every point, including _reading_
 `globalThis.localStorage`, which itself throws in blocked-storage contexts. If storage
 is unavailable the UI says so honestly instead of pretending to save.
 
+### Search is a build artefact, not a service
+
+`npm run build` is `astro build && pagefind --site dist`. The Pagefind CLI runs _after_ Astro
+and crawls the HTML Astro just produced, so the index is generated from the shipped pages
+rather than from source. Search then runs in the browser against those files: no query
+leaves the CDN, and no third-party origin is contacted, which is what keeps it free at any
+traffic level — see [ADR-0013](./docs/adr/0013-pagefind-static-search.md) for why a hosted
+service was rejected.
+
+Two things about it look like bugs and are not:
+
+- **`/pagefind/pagefind.js` does not exist at type-check time.** `src/pages/buscar.astro`
+  imports it through a variable specifier (`PAGEFIND_BUNDLE_URL`, marked `@vite-ignore`) so
+  neither Vite nor `tsc` tries to resolve a path the CLI has not written yet.
+  `src/types/pagefind.ts` is the hand-written contract it casts to, and has to be kept in
+  step with the Pagefind version pinned in `package.json`.
+- **Search is dead under `npm run dev`.** No build, no index. The page catches the failed
+  import and says so on screen in pt-BR rather than throwing.
+
+What gets indexed is decided in the markup, not in config. `data-pagefind-body` on the course
+index (`src/pages/curso/[curso]/index.astro`) and the lesson page
+(`src/pages/curso/[curso]/[aula].astro`) opts those two page types in and, by doing so, opts
+every other page out. The `data-pagefind-ignore` attributes on `/404`, `/offline`, `/licenca`,
+`/sobre` and the footer licence block are belt-and-braces on top of that already being true.
+
+Worksheet pages (`/ficha/…`) carry neither attribute, so a worksheet's own text is not
+indexed — a search matches the lesson that links to it, not the worksheet.
+
 ### Migrating to self-hosted video later
 
 If YouTube's branding or recommendations become a problem, the seam is already there.
