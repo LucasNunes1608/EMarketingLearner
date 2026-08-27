@@ -25,6 +25,7 @@ const PAGES: Array<{ name: string; path: string }> = [
   { name: 'about', path: '/sobre' },
   { name: 'certificate (locked)', path: '/certificado/colocando-seu-negocio-no-digital' },
   { name: 'offline fallback', path: '/offline' },
+  { name: 'licence', path: '/licenca' },
 ];
 
 for (const { name, path } of PAGES) {
