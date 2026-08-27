@@ -17,26 +17,41 @@ Commit at the end of each phase with message `feat(phaseN): <summary>`.
 
 ## Locked Decisions (do not revisit without asking the user)
 
+The decisions that were genuine trade-offs now live in [`docs/adr/`](../docs/adr/), which is
+their durable home; this plan defers to it rather than restating them. Start at
+[ADR-0001](../docs/adr/0001-zero-marginal-cost-constraint.md) — the rest derive from it.
+
+| Decision                             | Record                                                               |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| Static build, zero marginal cost     | [ADR-0001](../docs/adr/0001-zero-marginal-cost-constraint.md)        |
+| Cloudflare Pages hosting             | [ADR-0002](../docs/adr/0002-cloudflare-pages-hosting.md)             |
+| YouTube behind a provider seam       | [ADR-0003](../docs/adr/0003-youtube-video-behind-provider-seam.md)   |
+| Click-to-load video facade           | [ADR-0004](../docs/adr/0004-click-to-load-video-facade.md)           |
+| `localStorage` progress, no accounts | [ADR-0005](../docs/adr/0005-localstorage-progress-no-accounts.md)    |
+| Print-stylesheet certificates        | [ADR-0006](../docs/adr/0006-print-stylesheet-certificates.md)        |
+| No third-party runtime scripts       | [ADR-0007](../docs/adr/0007-no-third-party-runtime-scripts.md)       |
+| Donations, if ever, static only      | [ADR-0008](../docs/adr/0008-donations-static-surface-only.md)        |
+| Server-side measurement only         | [ADR-0009](../docs/adr/0009-server-side-traffic-measurement-only.md) |
+| Pagefind static search               | [ADR-0013](../docs/adr/0013-pagefind-static-search.md)               |
+
+`docs/adr/` also holds decisions taken after this plan was written — licensing, slug
+permanence, service-worker update behaviour — which were never part of the list below. Read
+the directory, not this table, for the complete set.
+
+The remainder are conventions rather than trade-offs, so they stay here:
+
 - **Audience/locale:** Brazilian small entrepreneurs. All learner-facing copy in **pt-BR**.
   Code, comments, commits, and README in **English**.
 - **Brand:** "Negócio Digital". Repo/folder stays `EMarketingLearner`. Brand centralized
   in `src/config/site.ts` so renaming is one edit.
-- **Stack:** Astro 5 (static `output: 'static'`), TypeScript strict, Tailwind CSS v4,
-  MDX content collections with Zod validation.
-- **Video:** pluggable provider abstraction; YouTube (`youtube-nocookie.com`) is the only
-  implementation in V1. Rendered as a **lazy facade** (poster + play button, iframe injected
-  on click) — no third-party JS or cookies until the learner opts in, and far less mobile data.
-- **Progress:** `localStorage` only. No accounts, no backend, no database, no cookies.
-  This is a deliberate cost AND LGPD decision — no personal data leaves the device.
-- **Certificate:** print-stylesheet based (`window.print()` → Save as PDF). Zero JS
-  dependency, chosen over jsPDF (~350 KB) because the audience is on mobile data.
-- **Search:** Pagefind, static index built at compile time. No server.
+- **Stack:** Astro 5, TypeScript strict, Tailwind CSS v4, MDX content collections with Zod
+  validation.
 - **Offline:** PWA service worker caches lesson text + worksheets. Video is excluded.
 - **Testing:** Vitest (unit) + Playwright (E2E) + `@axe-core/playwright` (WCAG 2.2 AA).
-- **Deploy:** Cloudflare Pages (unlimited free static bandwidth). CI on GitHub Actions.
-  The user connects their own accounts; no credentials are handled by the agent.
+- **CI and deploy ops:** GitHub Actions. You connect your own accounts; no credentials are
+  handled by an agent.
 - **Out of scope for V1:** auth, payments, comments/forum, admin CMS, i18n, self-hosted
-  HLS/R2 video, email capture.
+  HLS/R2 video, email capture. Donations are qualified by ADR-0008, not reopened here.
 
 ## Cost Model (the point of the whole design)
 
