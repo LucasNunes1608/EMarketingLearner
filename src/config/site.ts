@@ -20,6 +20,15 @@ export const SITE = {
   /** Used as the <html lang> attribute. */
   lang: 'pt-BR',
   author: 'Negócio Digital',
+  /**
+   * Public source repository, offered in the footer.
+   *
+   * This is the AGPL-3.0 section 13 offer of Corresponding Source: serving a
+   * modified version of this site over a network obliges you to give its users
+   * the source of YOUR version. If you fork this project, repoint this at your
+   * own repository — leaving it pointing here does not discharge the duty.
+   */
+  repository: 'https://github.com/LucasNunes1608/EMarketingLearner',
   /** Optional social/contact links. Empty strings are hidden from the footer. */
   links: {
     youtube: '',

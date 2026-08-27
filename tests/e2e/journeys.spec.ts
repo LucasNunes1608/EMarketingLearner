@@ -232,3 +232,58 @@ test.describe('offline support', () => {
     await context.setOffline(false);
   });
 });
+
+test.describe('licensing', () => {
+  const AGPL = 'https://www.gnu.org/licenses/agpl-3.0.html';
+  const CC = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.pt-BR';
+
+  test('the footer offers the source and names the licence over each half of the site', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const licence = page.locator('[data-licence]');
+
+    await expect(licence).toBeVisible();
+    await expect(licence.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+      'href',
+      /^https:\/\/github\.com\/.+/
+    );
+    await expect(licence.getByRole('link', { name: 'AGPL-3.0' })).toHaveAttribute('href', AGPL);
+    await expect(licence.getByRole('link', { name: 'CC BY-NC-SA 4.0' })).toHaveAttribute(
+      'href',
+      CC
+    );
+  });
+
+  /**
+   * The load-bearing assertion for AGPL section 13. The offer of Corresponding
+   * Source lives in the shared footer precisely so that it reaches every route of
+   * every fork without anyone having to remember to add it.
+   */
+  test('the source offer reaches every kind of page', async ({ page }) => {
+    const paths = [
+      '/',
+      COURSE,
+      LESSON_1,
+      '/ficha/01-google-meu-negocio',
+      '/buscar',
+      '/certificado/colocando-seu-negocio-no-digital',
+      '/offline',
+    ];
+
+    for (const path of paths) {
+      await page.goto(path);
+      await expect(page.locator('[data-licence] a[href*="github.com"]')).toHaveCount(1);
+    }
+  });
+
+  test('every licence link leaves the browsing context behind', async ({ page }) => {
+    await page.goto('/');
+    const links = page.locator('[data-licence] a');
+
+    await expect(links).not.toHaveCount(0);
+    for (const link of await links.all()) {
+      await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    }
+  });
+});
